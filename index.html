@@ -60,8 +60,20 @@
       font-size: 11px;
       font-weight: bold;
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      pointer-events: auto;
     }
     .hud-card span { color: #f59e0b; }
+
+    #btn-change-skin {
+      background: #334155;
+      border: 1px solid #64748b;
+      color: #f8fafc;
+      padding: 3px 6px;
+      border-radius: 6px;
+      font-size: 10px;
+      margin-left: 4px;
+      cursor: pointer;
+    }
 
     #hp-bar-wrap, #mp-bar-wrap {
       width: 85px;
@@ -129,7 +141,7 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
 
-    /* Кнопка действия (справа сверху от джойстика) */
+    /* Кнопка действия */
     #action-btn {
       display: none;
       position: absolute;
@@ -146,6 +158,62 @@
       box-shadow: 0 6px 16px rgba(0,0,0,0.5);
       z-index: 16;
       touch-action: manipulation;
+    }
+
+    /* Окно выбора скина / класса */
+    #skin-modal {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 15, 29, 0.96);
+      z-index: 50;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    #skin-modal h2 {
+      color: #f59e0b;
+      font-size: 20px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .skin-card {
+      background: #1e293b;
+      border: 2px solid #475569;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 320px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      cursor: pointer;
+    }
+    .skin-card:active {
+      border-color: #f59e0b;
+      background: #334155;
+    }
+    .skin-icon-box {
+      font-size: 32px;
+      width: 48px;
+      height: 48px;
+      background: #0f172a;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .skin-info h3 {
+      font-size: 15px;
+      color: #f8fafc;
+    }
+    .skin-info p {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 2px;
     }
 
     /* Пошаговая Боевая Арена */
@@ -181,7 +249,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
+      font-size: 26px;
     }
     .fighter-bar {
       width: 100%;
@@ -270,10 +338,6 @@
       filter: grayscale(1);
       pointer-events: none;
     }
-    .combat-skill-btn:active {
-      background: #334155;
-      border-color: #f59e0b;
-    }
 
     /* Диалоги */
     #dialog-modal {
@@ -314,7 +378,10 @@
   <!-- Верхний HUD -->
   <div id="top-bar">
     <div class="hud-card">
-      <div id="hero-name-label">Герой</div>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span id="hero-name-label" style="color:#fff;">Герой</span>
+        <button id="btn-change-skin">Скин</button>
+      </div>
       <div id="hp-bar-wrap"><div id="hp-bar-fill"></div></div>
       <div id="mp-bar-wrap"><div id="mp-bar-fill"></div></div>
     </div>
@@ -333,11 +400,37 @@
   <!-- Кнопка действия -->
   <button id="action-btn">ДЕЙСТВИЕ</button>
 
+  <!-- Меню выбора скина / класса -->
+  <div id="skin-modal">
+    <h2>Выберите персонажа</h2>
+    <div class="skin-card" onclick="selectSkin('mage')">
+      <div class="skin-icon-box">🧙‍♂️</div>
+      <div class="skin-info">
+        <h3>Боевой Маг</h3>
+        <p>HP: 80 | MP: 140 (Запас магии)</p>
+      </div>
+    </div>
+    <div class="skin-card" onclick="selectSkin('warrior')">
+      <div class="skin-icon-box">⚔️</div>
+      <div class="skin-info">
+        <h3>Рыцарь-Воин</h3>
+        <p>HP: 130 | MP: 70 (Крепкая броня)</p>
+      </div>
+    </div>
+    <div class="skin-card" onclick="selectSkin('rogue')">
+      <div class="skin-icon-box">🥷</div>
+      <div class="skin-info">
+        <h3>Ассасин</h3>
+        <p>HP: 100 | MP: 100 (+15% скорость бега)</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Боевая Арена -->
   <div id="combat-arena">
     <div class="combat-header">
       <div class="combat-fighter">
-        <div class="fighter-avatar" style="background:#2563eb;">🧙‍♂️</div>
+        <div class="fighter-avatar" id="arena-player-avatar" style="background:#2563eb;">🧙‍♂️</div>
         <div style="font-weight:bold; font-size:12px;" id="combat-player-name">Герой</div>
         <div class="fighter-bar"><div class="fighter-fill" id="arena-player-hp"></div></div>
         <div class="bar-num" id="arena-player-hp-text">100 / 100 HP</div>
@@ -371,23 +464,20 @@
 </div>
 
 <script>
-// --- РАСКРЫТИЕ НА ВЕСЬ ЭКРАН В TELEGRAM ---
+// --- ИНИЦИАЛИЗАЦИЯ TELEGRAM ---
 const tg = window.Telegram?.WebApp;
 let telegramUser = "Герой";
 
 if (tg) {
   tg.ready();
   tg.expand();
-  // Повторный вызов раскрытия при изменении вьюпорта
   if (tg.onEvent) {
     tg.onEvent('viewportChanged', () => {
       tg.expand();
       resize();
     });
   }
-  // Дополнительно разворачиваем через 150мс
   setTimeout(() => { if (tg.expand) tg.expand(); resize(); }, 150);
-
   if (tg.initDataUnsafe?.user?.first_name) {
     telegramUser = tg.initDataUnsafe.user.first_name;
   }
@@ -451,15 +541,12 @@ window.addEventListener('touchstart', () => Sound.init(), { once: true });
 window.addEventListener('click', () => Sound.init(), { once: true });
 
 // --- ХОЛСТ И МИР ---
-const container = document.getElementById('game-container');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
 function resize() {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 }
 window.addEventListener('resize', resize);
 resize();
@@ -467,19 +554,28 @@ resize();
 const WORLD = { width: 1800, height: 1400 };
 const camera = { x: 0, y: 0 };
 
-// ИГРОК
+// БАЗА СКИНОВ
+const SKINS = {
+  mage:    { name: "Боевой Маг", icon: "🧙‍♂️", color: "#2563eb", hp: 80,  mp: 140, speed: 190 },
+  warrior: { name: "Рыцарь-Воин", icon: "⚔️", color: "#dc2626", hp: 130, mp: 70,  speed: 180 },
+  rogue:   { name: "Ассасин",     icon: "🥷", color: "#059669", hp: 100, mp: 100, speed: 215 }
+};
+
+// ПАРАМЕТРЫ ИГРОКА
 const player = {
   x: 200,
   y: 450,
-  r: 16,
+  r: 18,
   speed: 190,
   vx: 0,
   vy: 0,
   faceAngle: 0,
-  hp: 100,
-  maxHp: 100,
-  mp: 100,
-  maxMp: 100,
+  skinKey: 'mage',
+  skin: SKINS.mage,
+  hp: 80,
+  maxHp: 80,
+  mp: 140,
+  maxMp: 140,
   gold: 0,
   weapon: null,
   skills: [
@@ -487,6 +583,32 @@ const player = {
     { id: 'thrust', name: "Точный выпад", baseDmg: 32, manaCost: 25 }
   ]
 };
+
+// ВЫБОР СКИНА
+function selectSkin(key) {
+  const s = SKINS[key];
+  if (!s) return;
+  player.skinKey = key;
+  player.skin = s;
+  player.maxHp = s.hp;
+  player.hp = s.hp;
+  player.maxMp = s.mp;
+  player.mp = s.mp;
+  player.speed = s.speed;
+
+  document.getElementById('arena-player-avatar').innerText = s.icon;
+  document.getElementById('arena-player-avatar').style.background = s.color;
+  document.getElementById('skin-modal').style.display = 'none';
+
+  updateArenaBars();
+  triggerHaptic('notification', 'success');
+}
+
+document.getElementById('btn-change-skin').addEventListener('click', (e) => {
+  e.preventDefault();
+  triggerHaptic('selection');
+  document.getElementById('skin-modal').style.display = 'flex';
+});
 
 // СУНДУК
 const chest = {
@@ -610,7 +732,7 @@ function startCombat(enemy) {
 function updateArenaBars() {
   const pPct = Math.max(0, (player.hp / player.maxHp) * 100);
   const mpPct = Math.max(0, (player.mp / player.maxMp) * 100);
-  const ePct = Math.max(0, (activeEnemy.hp / activeEnemy.maxHp) * 100);
+  const ePct = Math.max(0, (activeEnemy ? activeEnemy.hp / activeEnemy.maxHp : 1) * 100);
 
   arenaPlayerHp.style.width = `${pPct}%`;
   arenaPlayerMp.style.width = `${mpPct}%`;
@@ -622,8 +744,10 @@ function updateArenaBars() {
   const pPmpText = document.getElementById('arena-player-mp-text');
   if (pPmpText) pPmpText.innerText = `${Math.max(0, Math.round(player.mp))} / ${player.maxMp} MP`;
 
-  const eHpText = document.getElementById('arena-enemy-hp-text');
-  if (eHpText) eHpText.innerText = `${Math.max(0, Math.round(activeEnemy.hp))} / ${activeEnemy.maxHp} HP`;
+  if (activeEnemy) {
+    const eHpText = document.getElementById('arena-enemy-hp-text');
+    if (eHpText) eHpText.innerText = `${Math.max(0, Math.round(activeEnemy.hp))} / ${activeEnemy.maxHp} HP`;
+  }
 
   const topHp = document.getElementById('hp-bar-fill');
   if (topHp) topHp.style.width = `${pPct}%`;
@@ -859,16 +983,19 @@ function renderMinimap() {
   mCtx.fillStyle = "#162b16";
   mCtx.fillRect(0, 0, mW, mH);
 
+  // Дороги
   mCtx.fillStyle = "#5c4f39";
   roads.forEach(r => {
     mCtx.fillRect(r.x * scaleX, r.y * scaleY, r.w * scaleX, r.h * scaleY);
   });
 
+  // Сундук
   if (!chest.opened) {
     mCtx.fillStyle = "#facc15";
     mCtx.fillRect(chest.x * scaleX - 2, chest.y * scaleY - 2, 5, 5);
   }
 
+  // Враги
   mCtx.fillStyle = "#ef4444";
   enemies.forEach(e => {
     mCtx.beginPath();
@@ -876,6 +1003,7 @@ function renderMinimap() {
     mCtx.fill();
   });
 
+  // Игрок
   mCtx.fillStyle = "#38bdf8";
   mCtx.beginPath();
   mCtx.arc(player.x * scaleX, player.y * scaleY, 3.5, 0, Math.PI * 2);
@@ -886,7 +1014,7 @@ function renderMinimap() {
 let lastTime = performance.now();
 
 function update(dt) {
-  if (combatArena.style.display === 'flex' || dialogModal.style.display === 'block') {
+  if (combatArena.style.display === 'flex' || dialogModal.style.display === 'block' || document.getElementById('skin-modal').style.display === 'flex') {
     return;
   }
 
@@ -975,18 +1103,28 @@ function render() {
     ctx.fillText(e.name, e.x, e.y - 24);
   });
 
-  // Игрок
+  // Игрок (Скин)
   ctx.save();
   ctx.translate(player.x, player.y);
+
+  // Направление взгляда (указатель)
   ctx.strokeStyle = "#facc15";
   ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(0,0);
   ctx.lineTo(Math.cos(player.faceAngle)*24, Math.sin(player.faceAngle)*24);
   ctx.stroke();
 
-  ctx.fillStyle = "#2563eb";
+  // Окружность под скином
+  ctx.fillStyle = player.skin.color;
   ctx.beginPath(); ctx.arc(0, 0, player.r, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
+
+  // Иконка-скин персонажа
+  ctx.font = "18px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(player.skin.icon, 0, 1);
+
   ctx.restore();
 
   ctx.restore();
@@ -1003,7 +1141,8 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
-// Запуск
+// Запуск игры
+updateArenaBars();
 resize();
 requestAnimationFrame(loop);
 </script>

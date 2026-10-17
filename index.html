@@ -10,8 +10,6 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      user-select: none;
-      -webkit-user-select: none;
       -webkit-touch-callout: none;
     }
     html, body {
@@ -21,34 +19,55 @@
       background: #0b0f19;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    #game-container {
-      position: relative;
+
+    /* Автоповорот в ландшафт (альбомный режим), если телефон держат вертикально */
+    #landscape-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100vw;
       height: 100vh;
+      overflow: hidden;
+    }
+    @media screen and (orientation: portrait) {
+      #landscape-wrapper {
+        width: 100vh;
+        height: 100vw;
+        transform: rotate(90deg);
+        transform-origin: top left;
+        left: 100vw;
+      }
+    }
+
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
     }
     canvas {
       display: block;
       width: 100%;
       height: 100%;
       background: #192a18;
+      touch-action: none;
     }
 
-    /* Верхний интерфейс (HUD) */
+    /* Верхний HUD */
     #top-bar {
       position: absolute;
       top: 10px;
-      left: 10px;
-      right: 10px;
+      left: 14px;
+      right: 14px;
       display: flex;
       justify-content: space-between;
-      gap: 6px;
+      gap: 8px;
       pointer-events: none;
       z-index: 10;
     }
     .hud-card {
       background: rgba(15, 23, 42, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 6px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 6px 12px;
       border-radius: 10px;
       color: #fff;
       font-size: 11px;
@@ -57,29 +76,27 @@
     }
     .hud-card span { color: #f59e0b; }
     #hp-bar-wrap {
-      width: 110px;
-      height: 10px;
+      width: 100px;
+      height: 8px;
       background: #334155;
-      border-radius: 5px;
+      border-radius: 4px;
       overflow: hidden;
-      margin-top: 3px;
-      border: 1px solid #000;
+      margin-top: 4px;
     }
     #hp-bar-fill {
       width: 100%;
       height: 100%;
       background: linear-gradient(90deg, #ef4444, #22c55e);
-      transition: width 0.15s ease;
     }
 
-    /* Виртуальный джойстик ходьбы (слева) */
+    /* Джойстик (слева) */
     #joystick-base {
       position: absolute;
-      bottom: 30px;
-      left: 20px;
-      width: 115px;
-      height: 115px;
-      background: rgba(255, 255, 255, 0.14);
+      bottom: 25px;
+      left: 25px;
+      width: 120px;
+      height: 120px;
+      background: rgba(255, 255, 255, 0.16);
       border: 2px solid rgba(255, 255, 255, 0.35);
       border-radius: 50%;
       touch-action: none;
@@ -87,8 +104,8 @@
     }
     #joystick-stick {
       position: absolute;
-      top: 32px;
-      left: 32px;
+      top: 35px;
+      left: 35px;
       width: 50px;
       height: 50px;
       background: radial-gradient(circle, #f8fafc, #94a3b8);
@@ -97,11 +114,11 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
 
-    /* Блок боевых скиллов (в стиле MLBB / справа) */
+    /* Боевые скиллы MLBB (справа) */
     #skills-container {
       position: absolute;
-      bottom: 25px;
-      right: 20px;
+      bottom: 20px;
+      right: 25px;
       width: 180px;
       height: 180px;
       pointer-events: none;
@@ -115,7 +132,6 @@
       font-weight: 900;
       font-size: 11px;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       box-shadow: 0 4px 14px rgba(0,0,0,0.6);
@@ -126,7 +142,7 @@
     .skill-cd-mask {
       position: absolute;
       inset: 0;
-      background: rgba(0,0,0,0.65);
+      background: rgba(0,0,0,0.7);
       border-radius: 50%;
       display: none;
       align-items: center;
@@ -135,91 +151,98 @@
       color: #f87171;
     }
 
-    /* Кнопка Базовой Атаки */
     #btn-attack {
-      width: 68px;
-      height: 68px;
-      bottom: 5px;
-      right: 5px;
+      width: 66px;
+      height: 66px;
+      bottom: 0px;
+      right: 0px;
       background: linear-gradient(135deg, #e11d48, #9f1239);
-      font-size: 14px;
+      font-size: 13px;
       border-width: 3px;
     }
-    /* Скилл 1 (Урон) */
     #btn-skill-1 {
-      width: 50px;
-      height: 50px;
+      width: 48px;
+      height: 48px;
       bottom: 10px;
-      right: 90px;
+      right: 85px;
       background: linear-gradient(135deg, #f59e0b, #b45309);
     }
-    /* Скилл 2 (Блинк / Эскейп) */
     #btn-skill-2 {
-      width: 50px;
-      height: 50px;
-      bottom: 75px;
-      right: 75px;
+      width: 48px;
+      height: 48px;
+      bottom: 70px;
+      right: 70px;
       background: linear-gradient(135deg, #06b6d4, #0e7490);
     }
-    /* Скилл 3 (Ультимейт) */
     #btn-skill-3 {
-      width: 54px;
-      height: 54px;
-      bottom: 95px;
-      right: 10px;
+      width: 52px;
+      height: 52px;
+      bottom: 90px;
+      right: 5px;
       background: linear-gradient(135deg, #8b5cf6, #5b21b6);
       border-color: #facc15;
     }
 
-    /* Кнопка Взаимодействия (Диалог / Лут) */
+    /* Кнопка Взаимодействия */
     #action-btn {
       display: none;
       position: absolute;
-      bottom: 110px;
-      left: 145px;
-      width: 56px;
-      height: 56px;
+      bottom: 120px;
+      left: 130px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
       background: #facc15;
       color: #000;
       font-size: 11px;
       font-weight: 900;
-      border: 2px solid #fff;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      border: 3px solid #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       z-index: 10;
       touch-action: manipulation;
     }
 
-    /* Модалки: Диалоги, Кубик, Смена Скилла */
+    /* Модалки: Диалоги и Кубик */
     .game-modal {
       display: none;
       position: absolute;
-      background: rgba(15, 23, 42, 0.96);
+      background: rgba(15, 23, 42, 0.98);
       border: 2px solid #eab308;
       border-radius: 16px;
-      padding: 16px;
+      padding: 16px 20px;
       color: #f8fafc;
-      z-index: 20;
-      box-shadow: 0 10px 35px rgba(0,0,0,0.85);
+      z-index: 30;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+      pointer-events: auto;
     }
     #dialog-modal {
-      left: 12px;
-      right: 12px;
+      left: 20px;
+      right: 20px;
       bottom: 20px;
+      max-height: 75vh;
+      overflow-y: auto;
     }
-    #dialog-name { color: #facc15; font-size: 15px; font-weight: 800; margin-bottom: 6px; }
-    #dialog-text { font-size: 13.5px; line-height: 1.4; margin-bottom: 12px; color: #cbd5e1; }
+    #dialog-name { color: #facc15; font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+    #dialog-text { font-size: 14px; line-height: 1.4; margin-bottom: 14px; color: #cbd5e1; }
+    
     .choice-btn {
       display: block;
       width: 100%;
-      padding: 10px 12px;
-      margin-top: 6px;
+      padding: 12px 14px;
+      margin-top: 8px;
       background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 8px;
+      border: 1px solid #475569;
+      border-radius: 10px;
       color: #fff;
-      font-size: 13px;
+      font-size: 13.5px;
+      font-weight: 600;
       text-align: left;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .choice-btn:active {
+      background: #334155;
+      border-color: #f59e0b;
     }
 
     #dice-modal {
@@ -227,80 +250,87 @@
       left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
-      min-width: 220px;
+      min-width: 230px;
       border-color: #ef4444;
     }
-    #dice-val { font-size: 60px; font-weight: 900; color: #f59e0b; margin: 8px 0; }
+    #dice-val { font-size: 62px; font-weight: 900; color: #f59e0b; margin: 8px 0; }
   </style>
 </head>
 <body>
 
-<div id="game-container">
-  <canvas id="canvas"></canvas>
+<div id="landscape-wrapper">
+  <div id="game-container">
+    <canvas id="canvas"></canvas>
 
-  <!-- Верхняя строка HUD -->
-  <div id="top-bar">
-    <div class="hud-card">
-      <div id="hero-name-label">Игрок: Герой</div>
-      <div id="hp-bar-wrap"><div id="hp-bar-fill"></div></div>
+    <!-- Верхний интерфейс -->
+    <div id="top-bar">
+      <div class="hud-card">
+        <div id="hero-name-label">Герой</div>
+        <div id="hp-bar-wrap"><div id="hp-bar-fill"></div></div>
+      </div>
+      <div class="hud-card">Золото: <span id="gold-val">0</span> 🪙</div>
+      <div class="hud-card" id="quest-hud">Квест: <span>Идите по восточной дороге к Заставе</span></div>
     </div>
-    <div class="hud-card">Золото: <span id="gold-val">0</span> 🪙</div>
-    <div class="hud-card" id="quest-hud">Квест: <span>Осмотрите окрестности</span></div>
-  </div>
 
-  <!-- Джойстик передвижения -->
-  <div id="joystick-base"><div id="joystick-stick"></div></div>
+    <!-- Джойстик -->
+    <div id="joystick-base"><div id="joystick-stick"></div></div>
 
-  <!-- Кнопка контекстного действия -->
-  <button id="action-btn">ДЕЙСТВИЕ</button>
+    <!-- Кнопка действия -->
+    <button id="action-btn">ДЕЙСТВИЕ</button>
 
-  <!-- Панель управления скиллами MOBA -->
-  <div id="skills-container">
-    <button class="skill-btn" id="btn-attack">ATK</button>
+    <!-- Скиллы -->
+    <div id="skills-container">
+      <button class="skill-btn" id="btn-attack">ATK</button>
 
-    <button class="skill-btn" id="btn-skill-1">
-      <span id="s1-label">Вихрь</span>
-      <div class="skill-cd-mask" id="s1-cd"></div>
-    </button>
+      <button class="skill-btn" id="btn-skill-1">
+        <span id="s1-label">Вихрь</span>
+        <div class="skill-cd-mask" id="s1-cd"></div>
+      </button>
 
-    <button class="skill-btn" id="btn-skill-2">
-      <span id="s2-label">Блинк</span>
-      <div class="skill-cd-mask" id="s2-cd"></div>
-    </button>
+      <button class="skill-btn" id="btn-skill-2">
+        <span id="s2-label">Блинк</span>
+        <div class="skill-cd-mask" id="s2-cd"></div>
+      </button>
 
-    <button class="skill-btn" id="btn-skill-3">
-      <span id="s3-label">Ульта</span>
-      <div class="skill-cd-mask" id="s3-cd"></div>
-    </button>
-  </div>
+      <button class="skill-btn" id="btn-skill-3">
+        <span id="s3-label">Ульта</span>
+        <div class="skill-cd-mask" id="s3-cd"></div>
+      </button>
+    </div>
 
-  <!-- Окно Диалогов -->
-  <div class="game-modal" id="dialog-modal">
-    <div id="dialog-name">Собеседник</div>
-    <div id="dialog-text">...</div>
-    <div id="dialog-options"></div>
-  </div>
+    <!-- Модалка диалога -->
+    <div class="game-modal" id="dialog-modal">
+      <div id="dialog-name">Собеседник</div>
+      <div id="dialog-text">...</div>
+      <div id="dialog-options"></div>
+    </div>
 
-  <!-- Окно броска D20 -->
-  <div class="game-modal" id="dice-modal">
-    <div style="font-size:12px; color:#94a3b8; font-weight:700;">ПРОВЕРКА D20</div>
-    <div id="dice-val">--</div>
-    <div id="dice-status" style="font-size:14px; font-weight:bold;">Бросок...</div>
+    <!-- Модалка кубика D20 -->
+    <div class="game-modal" id="dice-modal">
+      <div style="font-size:12px; color:#94a3b8; font-weight:700;">ПРОВЕРКА КУБИКА D20</div>
+      <div id="dice-val">--</div>
+      <div id="dice-status" style="font-size:14px; font-weight:bold;">Бросок...</div>
+    </div>
   </div>
 </div>
 
 <script>
-// --- ИНИЦИАЛИЗАЦИЯ И ОБЛАЧНОЕ СОХРАНЕНИЕ TELEGRAM ---
+// --- ИНИЦИАЛИЗАЦИЯ TELEGRAM & ОРИЕНТАЦИЯ ЭКРАНА ---
 const tg = window.Telegram?.WebApp;
 let telegramUser = "Герой";
+
 if (tg) {
   tg.ready();
   tg.expand();
+  // Блокировка альбомной ориентации для новых версий Telegram
+  if (tg.lockOrientation) {
+    try { tg.lockOrientation(); } catch(e) {}
+  }
   if (tg.initDataUnsafe?.user?.first_name) {
     telegramUser = tg.initDataUnsafe.user.first_name;
   }
 }
-document.getElementById('hero-name-label').innerText = `${telegramUser}`;
+document.getElementById('hero-name-label').innerText = telegramUser;
 
 function triggerHaptic(type = 'impact', style = 'medium') {
   if (tg?.HapticFeedback) {
@@ -308,40 +338,11 @@ function triggerHaptic(type = 'impact', style = 'medium') {
     else if (type === 'notification') tg.HapticFeedback.notificationOccurred(style);
     else if (type === 'selection') tg.HapticFeedback.selectionChanged();
   } else if (navigator.vibrate) {
-    navigator.vibrate(type === 'notification' ? 80 : 25);
+    navigator.vibrate(20);
   }
 }
 
-// Сохранение и загрузка прогресса
-function saveProgress() {
-  const data = JSON.stringify({
-    gold: player.gold,
-    s1: player.skills.s1.id,
-    s2: player.skills.s2.id,
-    s3: player.skills.s3.id,
-    quest: currentQuest
-  });
-  if (tg?.CloudStorage) tg.CloudStorage.setItem('rpg_save', data);
-  localStorage.setItem('rpg_save', data);
-}
-
-function loadProgress() {
-  const raw = localStorage.getItem('rpg_save');
-  if (raw) {
-    try {
-      const parsed = JSON.parse(raw);
-      player.gold = parsed.gold || 0;
-      if (parsed.s1 && SKILL_DATABASE[parsed.s1]) player.skills.s1 = { ...SKILL_DATABASE[parsed.s1] };
-      if (parsed.s2 && SKILL_DATABASE[parsed.s2]) player.skills.s2 = { ...SKILL_DATABASE[parsed.s2] };
-      if (parsed.s3 && SKILL_DATABASE[parsed.s3]) player.skills.s3 = { ...SKILL_DATABASE[parsed.s3] };
-      if (parsed.quest) setQuest(parsed.quest);
-      updateSkillLabels();
-      updateGoldUI();
-    } catch (e) {}
-  }
-}
-
-// --- ЗВУКОВОЙ ДВИЖОК (WEB AUDIO) ---
+// Звуки Web Audio
 const Sound = {
   ctx: null,
   init() {
@@ -360,67 +361,82 @@ const Sound = {
 
     if (type === 'slash') {
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(350, t);
-      osc.frequency.exponentialRampToValueAtTime(80, t + 0.12);
+      osc.frequency.setValueAtTime(320, t);
+      osc.frequency.exponentialRampToValueAtTime(70, t + 0.1);
+      gain.gain.setValueAtTime(0.08, t);
+      gain.gain.linearRampToValueAtTime(0.01, t + 0.1);
+      osc.start(t); osc.stop(t + 0.1);
+    } else if (type === 'blink') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(260, t);
+      osc.frequency.exponentialRampToValueAtTime(800, t + 0.12);
       gain.gain.setValueAtTime(0.1, t);
       gain.gain.linearRampToValueAtTime(0.01, t + 0.12);
       osc.start(t); osc.stop(t + 0.12);
-    } else if (type === 'blink') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(300, t);
-      osc.frequency.exponentialRampToValueAtTime(850, t + 0.15);
-      gain.gain.setValueAtTime(0.12, t);
-      gain.gain.linearRampToValueAtTime(0.01, t + 0.15);
-      osc.start(t); osc.stop(t + 0.15);
     } else if (type === 'ult') {
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(150, t);
-      osc.frequency.linearRampToValueAtTime(60, t + 0.4);
-      gain.gain.setValueAtTime(0.25, t);
-      gain.gain.linearRampToValueAtTime(0.01, t + 0.4);
-      osc.start(t); osc.stop(t + 0.4);
-    } else if (type === 'hit') {
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(120, t);
-      gain.gain.setValueAtTime(0.15, t);
-      gain.gain.linearRampToValueAtTime(0.01, t + 0.08);
-      osc.start(t); osc.stop(t + 0.08);
+      osc.frequency.setValueAtTime(140, t);
+      osc.frequency.linearRampToValueAtTime(50, t + 0.35);
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.linearRampToValueAtTime(0.01, t + 0.35);
+      osc.start(t); osc.stop(t + 0.35);
+    } else if (type === 'click') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(450, t);
+      gain.gain.setValueAtTime(0.06, t);
+      gain.gain.linearRampToValueAtTime(0.001, t + 0.04);
+      osc.start(t); osc.stop(t + 0.04);
     }
   }
 };
 window.addEventListener('touchstart', () => Sound.init(), { once: true });
 window.addEventListener('click', () => Sound.init(), { once: true });
 
-// --- БАЗА ЗНАНИЙ СКИЛЛОВ (ДЛЯ ЗАМЕНЫ) ---
+// --- СКИЛЛЫ ---
 const SKILL_DATABASE = {
   slash_aoe: { id: "slash_aoe", name: "Вихрь", type: 1, cd: 3.5, cdTimer: 0, range: 75, dmg: 35 },
   fireball:  { id: "fireball",  name: "Фаербол", type: 1, cd: 4.0, cdTimer: 0, range: 120, dmg: 55 },
-  blink:     { id: "blink",     name: "Блинк", type: 2, cd: 5.0, cdTimer: 0, dist: 130 },
-  sprint:    { id: "sprint",    name: "Ускорение", type: 2, cd: 6.0, cdTimer: 0, dist: 80 },
-  thunder:   { id: "thunder",   name: "Гром", type: 3, cd: 11.0, cdTimer: 0, range: 140, dmg: 90 },
-  meteor:    { id: "meteor",    name: "Метеор", type: 3, cd: 13.0, cdTimer: 0, range: 160, dmg: 120 }
+  blink:     { id: "blink",     name: "Блинк", type: 2, cd: 4.5, cdTimer: 0, dist: 130 },
+  sprint:    { id: "sprint",    name: "Рывок", type: 2, cd: 5.5, cdTimer: 0, dist: 85 },
+  thunder:   { id: "thunder",   name: "Гром", type: 3, cd: 10.0, cdTimer: 0, range: 140, dmg: 90 },
+  meteor:    { id: "meteor",    name: "Метеор", type: 3, cd: 12.0, cdTimer: 0, range: 160, dmg: 120 }
 };
 
-// --- МИР И ХОЛСТ ---
+// ХОЛСТ И РАЗРЕШЕНИЕ
+const container = document.getElementById('game-container');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+
+function resize() {
+  const rect = container.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+}
 window.addEventListener('resize', resize);
-resize();
+setTimeout(resize, 100);
 
 const WORLD = { width: 2200, height: 1600 };
 const camera = { x: 0, y: 0 };
-let currentQuest = "Осмотрите заставу на востоке";
 
-function setQuest(q) {
-  currentQuest = q;
-  document.getElementById('quest-hud').innerHTML = `Квест: <span>${q}</span>`;
-  saveProgress();
-}
+// ДОРОГИ (ТРОПИНКИ)
+const roads = [
+  // Главная дорога запад-восток
+  { x: 100, y: 470, w: 1200, h: 60 },
+  // Ответвление на юг к озеру
+  { x: 500, y: 530, w: 60, h: 600 },
+  // Ответвление к торговцу
+  { x: 300, y: 380, w: 60, h: 90 }
+];
+
+// УКАЗАТЕЛИ НА ДОРОГАХ
+const signs = [
+  { x: 470, y: 440, text: "➡ ЗАСТАВА  ⬇ ОЗЕРО" },
+  { x: 270, y: 440, text: "⬅ ЛАГЕРЬ  ⬆ ЛАВКА" }
+];
 
 // ИГРОК
 const player = {
-  x: 400,
+  x: 200,
   y: 500,
   r: 16,
   speed: 210,
@@ -431,7 +447,6 @@ const player = {
   maxHp: 100,
   gold: 0,
   isInvulnerable: false,
-  walkFrame: 0,
   skills: {
     s1: { ...SKILL_DATABASE.slash_aoe },
     s2: { ...SKILL_DATABASE.blink },
@@ -439,33 +454,28 @@ const player = {
   }
 };
 
-// ДРОПНУТЫЕ СФЕРЫ СКИЛЛОВ (LOOT)
 const droppedSkills = [];
-
-// ВРАГИ (РАЗБОЙНИКИ И МОБЫ)
 const enemies = [
-  { id: 1, x: 550, y: 850, r: 16, hp: 60, maxHp: 60, speed: 110, dmg: 12, agro: false, name: "Разбойник" },
-  { id: 2, x: 750, y: 950, r: 16, hp: 60, maxHp: 60, speed: 110, dmg: 12, agro: false, name: "Головорез" },
-  { id: 3, x: 1200, y: 400, r: 20, hp: 130, maxHp: 130, speed: 90, dmg: 22, agro: false, name: "Орк-Громила" }
+  { id: 1, x: 750, y: 440, r: 16, hp: 60, maxHp: 60, speed: 100, dmg: 12, agro: false, name: "Разбойник" },
+  { id: 2, x: 530, y: 850, r: 16, hp: 60, maxHp: 60, speed: 100, dmg: 12, agro: false, name: "Головорез" },
+  { id: 3, x: 1350, y: 500, r: 20, hp: 130, maxHp: 130, speed: 90, dmg: 22, agro: false, name: "Орк-Громила" }
 ];
 
-// NPC
 const npcs = [
-  { id: 'guard', x: 920, y: 480, r: 18, name: "Капитан Заставы", isHostile: false, hp: 160, maxHp: 160, speed: 120, dmg: 25 },
-  { id: 'hermit', x: 420, y: 1100, r: 16, name: "Шаман Озера", isHostile: false, hp: 90, maxHp: 90, speed: 100, dmg: 15 },
-  { id: 'merchant', x: 300, y: 400, r: 17, name: "Торговец Зельями", isHostile: false }
+  { id: 'merchant', x: 330, y: 350, r: 18, name: "Торговец Зельями", isHostile: false },
+  { id: 'guard', x: 1100, y: 500, r: 18, name: "Капитан Заставы", isHostile: false, hp: 160, maxHp: 160, speed: 120, dmg: 25 },
+  { id: 'hermit', x: 530, y: 1150, r: 16, name: "Шаман Озера", isHostile: false, hp: 90, maxHp: 90, speed: 100, dmg: 15 }
 ];
 
-// ВИЗУАЛЬНЫЕ ЭФФЕКТЫ (FX)
 const effects = [];
-function addSlashFX(x, y, radius, color = '#f59e0b') {
-  effects.push({ type: 'slash', x, y, r: radius, color, life: 0.18, maxLife: 0.18 });
+function addSlashFX(x, y, r, color = '#f59e0b') {
+  effects.push({ type: 'slash', x, y, r, color, life: 0.16, maxLife: 0.16 });
 }
-function addExplosionFX(x, y, radius) {
-  effects.push({ type: 'explosion', x, y, r: radius, life: 0.35, maxLife: 0.35 });
+function addExplosionFX(x, y, r) {
+  effects.push({ type: 'explosion', x, y, r, life: 0.32, maxLife: 0.32 });
 }
 
-// --- ВИРТУАЛЬНЫЙ ДЖОЙСТИК ---
+// --- УПРАВЛЕНИЕ: ДЖОЙСТИК ---
 const joyBase = document.getElementById('joystick-base');
 const joyStick = document.getElementById('joystick-stick');
 let joyTouchId = null;
@@ -484,21 +494,22 @@ joyBase.addEventListener('touchstart', e => {
 window.addEventListener('touchmove', e => {
   if (joyTouchId === null) return;
   for (let i = 0; i < e.changedTouches.length; i++) {
-    if (e.changedTouches[i].identifier === joyTouchId) {
-      handleJoyMove(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+    const t = e.changedTouches[i];
+    if (t.identifier === joyTouchId) {
+      handleJoyMove(t.clientX, t.clientY);
       break;
     }
   }
 }, { passive: false });
 
-function resetJoystick() {
+function resetJoy() {
   joyTouchId = null;
   joyStick.style.transform = `translate3d(0, 0, 0)`;
   player.vx = 0;
   player.vy = 0;
 }
-window.addEventListener('touchend', resetJoystick);
-window.addEventListener('touchcancel', resetJoystick);
+window.addEventListener('touchend', resetJoy);
+window.addEventListener('touchcancel', resetJoy);
 
 function handleJoyMove(cx, cy) {
   const dx = cx - joyCenter.x;
@@ -513,7 +524,7 @@ function handleJoyMove(cx, cy) {
   player.faceAngle = angle;
 }
 
-// --- КНОПКИ БОЯ И СКИЛЛОВ В СТИЛЕ MLBB ---
+// --- КНОПКИ АТАКИ И СКИЛЛОВ ---
 function updateSkillLabels() {
   document.getElementById('s1-label').innerText = player.skills.s1.name;
   document.getElementById('s2-label').innerText = player.skills.s2.name;
@@ -521,83 +532,67 @@ function updateSkillLabels() {
 }
 updateSkillLabels();
 
-function updateGoldUI() {
-  document.getElementById('gold-val').innerText = player.gold;
+function attachTouchClick(elementId, callback) {
+  const el = document.getElementById(elementId);
+  el.addEventListener('touchstart', (e) => { e.preventDefault(); callback(); }, { passive: false });
+  el.addEventListener('click', (e) => { e.preventDefault(); callback(); });
 }
 
-// Базовая атака
-document.getElementById('btn-attack').addEventListener('touchstart', (e) => {
-  e.preventDefault();
+attachTouchClick('btn-attack', () => {
   triggerHaptic('impact', 'medium');
   Sound.play('slash');
   addSlashFX(player.x + Math.cos(player.faceAngle)*30, player.y + Math.sin(player.faceAngle)*30, 45, '#e11d48');
-  dealAoEDamage(player.x, player.y, 65, 20);
+  dealAoE(player.x, player.y, 65, 22);
 });
 
-// Скилл 1: Урон
-document.getElementById('btn-skill-1').addEventListener('touchstart', (e) => {
-  e.preventDefault();
+attachTouchClick('btn-skill-1', () => {
   const s = player.skills.s1;
   if (s.cdTimer > 0) return;
   s.cdTimer = s.cd;
   triggerHaptic('impact', 'heavy');
   Sound.play('slash');
   addSlashFX(player.x, player.y, s.range, '#f59e0b');
-  dealAoEDamage(player.x, player.y, s.range, s.dmg);
+  dealAoE(player.x, player.y, s.range, s.dmg);
 });
 
-// Скилл 2: Блинк / Рывок
-document.getElementById('btn-skill-2').addEventListener('touchstart', (e) => {
-  e.preventDefault();
+attachTouchClick('btn-skill-2', () => {
   const s = player.skills.s2;
   if (s.cdTimer > 0) return;
   s.cdTimer = s.cd;
   triggerHaptic('impact', 'medium');
   Sound.play('blink');
-
-  // Создаем след блинка
-  effects.push({ type: 'ghost', x: player.x, y: player.y, life: 0.25, maxLife: 0.25 });
   player.x += Math.cos(player.faceAngle) * s.dist;
   player.y += Math.sin(player.faceAngle) * s.dist;
   player.isInvulnerable = true;
   setTimeout(() => player.isInvulnerable = false, 300);
 });
 
-// Скилл 3: Ультимейт
-document.getElementById('btn-skill-3').addEventListener('touchstart', (e) => {
-  e.preventDefault();
+attachTouchClick('btn-skill-3', () => {
   const s = player.skills.s3;
   if (s.cdTimer > 0) return;
   s.cdTimer = s.cd;
   triggerHaptic('notification', 'warning');
   Sound.play('ult');
   addExplosionFX(player.x, player.y, s.range);
-  dealAoEDamage(player.x, player.y, s.range, s.dmg);
+  dealAoE(player.x, player.y, s.range, s.dmg);
 });
 
-// Нанесение урона мобам и агрессивным NPC
-function dealAoEDamage(cx, cy, range, dmg) {
-  // Враги
+function dealAoE(cx, cy, range, dmg) {
   enemies.forEach(e => {
     if (Math.hypot(e.x - cx, e.y - cy) <= range + e.r) {
       e.hp -= dmg;
       e.agro = true;
-      Sound.play('hit');
       triggerHaptic('impact', 'light');
       if (e.hp <= 0) killEnemy(e);
     }
   });
-
-  // Враждебные NPC
   npcs.forEach(n => {
     if (n.isHostile && Math.hypot(n.x - cx, n.y - cy) <= range + n.r) {
       n.hp -= dmg;
-      Sound.play('hit');
       if (n.hp <= 0) {
         n.isDead = true;
-        player.gold += 35;
-        updateGoldUI();
-        dropSkill(n.x, n.y, SKILL_DATABASE.meteor);
+        player.gold += 30;
+        updateGold();
       }
     }
   });
@@ -608,24 +603,24 @@ function killEnemy(e) {
   if (idx !== -1) {
     enemies.splice(idx, 1);
     player.gold += 15;
-    updateGoldUI();
-    saveProgress();
+    updateGold();
     triggerHaptic('notification', 'success');
-
-    // Шанс дропа сменяемого скилла
     if (Math.random() < 0.6) {
-      const dropPool = [SKILL_DATABASE.fireball, SKILL_DATABASE.meteor, SKILL_DATABASE.sprint];
-      const randomSkill = dropPool[Math.floor(Math.random() * dropPool.length)];
-      dropSkill(e.x, e.y, randomSkill);
+      const pool = [SKILL_DATABASE.fireball, SKILL_DATABASE.meteor, SKILL_DATABASE.sprint];
+      droppedSkills.push({ x: e.x, y: e.y, skill: pool[Math.floor(Math.random() * pool.length)], r: 14 });
     }
   }
 }
 
-function dropSkill(x, y, skillData) {
-  droppedSkills.push({ x, y, skill: skillData, r: 14 });
+function updateGold() {
+  document.getElementById('gold-val').innerText = player.gold;
+}
+function updateHpUI() {
+  const pct = Math.max(0, (player.hp / player.maxHp) * 100);
+  document.getElementById('hp-bar-fill').style.width = `${pct}%`;
 }
 
-// --- ДИАЛОГИ, ТОРГОВЕЦ И КУБИК С АГРОМ ---
+// --- ДИАЛОГИ И КУБИК (С НАДЕЖНЫМИ ОБРАБОТЧИКАМИ) ---
 const actionBtn = document.getElementById('action-btn');
 const dialogModal = document.getElementById('dialog-modal');
 const dialogName = document.getElementById('dialog-name');
@@ -637,128 +632,131 @@ const diceStatus = document.getElementById('dice-status');
 
 let currentInteract = null;
 
-actionBtn.addEventListener('click', () => {
+attachTouchClick('action-btn', () => {
   triggerHaptic('selection');
   if (currentInteract?.type === 'skill') {
-    swapSkill(currentInteract.data);
+    const newS = currentInteract.data.skill;
+    if (newS.type === 1) player.skills.s1 = { ...newS };
+    else if (newS.type === 2) player.skills.s2 = { ...newS };
+    else if (newS.type === 3) player.skills.s3 = { ...newS };
+    const idx = droppedSkills.indexOf(currentInteract.data);
+    if (idx !== -1) droppedSkills.splice(idx, 1);
+    updateSkillLabels();
+    actionBtn.style.display = 'none';
   } else if (currentInteract?.type === 'npc') {
-    interactWithNPC(currentInteract.data);
+    openNpcDialog(currentInteract.data);
   }
 });
 
-function swapSkill(dropObj) {
-  const newS = dropObj.skill;
-  if (newS.type === 1) player.skills.s1 = { ...newS };
-  else if (newS.type === 2) player.skills.s2 = { ...newS };
-  else if (newS.type === 3) player.skills.s3 = { ...newS };
-
-  const idx = droppedSkills.indexOf(dropObj);
-  if (idx !== -1) droppedSkills.splice(idx, 1);
-  updateSkillLabels();
-  saveProgress();
-  triggerHaptic('notification', 'success');
-  actionBtn.style.display = 'none';
-}
-
-function interactWithNPC(n) {
+function openNpcDialog(n) {
   dialogName.innerText = n.name;
   dialogModal.style.display = 'block';
+  actionBtn.style.display = 'none';
+  dialogOptions.innerHTML = '';
 
   if (n.id === 'merchant') {
-    dialogText.innerText = "«Привет, путник! Могу залечить твои раны эликсиром жизни за 20 золотых.»";
-    dialogOptions.innerHTML = `
-      <button class="choice-btn" onclick="buyHeal()">Купить Зелье Исцеления (20 золота)</button>
-      <button class="choice-btn" onclick="closeDialog()">[Уйти]</button>
-    `;
+    dialogText.innerText = "«Привет! Я торгую зельями жизни. Могу залечить твои раны за 20 монет.»";
+    createChoiceBtn("🧪 Купить Зелье Исцеления (20 золота)", () => {
+      if (player.gold >= 20 && player.hp < player.maxHp) {
+        player.gold -= 20;
+        player.hp = Math.min(player.maxHp, player.hp + 50);
+        updateGold();
+        updateHpUI();
+        triggerHaptic('notification', 'success');
+        closeDialog();
+      }
+    });
+    createChoiceBtn("[Уйти]", closeDialog);
   } else if (n.id === 'guard') {
-    dialogText.innerText = "«Я охраняю восточный рубеж. Докажи, что ты достоин пройти, либо проваливай!»";
-    dialogOptions.innerHTML = `
-      <button class="choice-btn" onclick="rollDiceWithAggro(n, 12, 'convince')">
-        🎲 [Убеждение: Сл. 12] «Я истребляю разбойников в округе»
-      </button>
-      <button class="choice-btn" onclick="rollDiceWithAggro(n, 15, 'threat')">
-        🎲 [Запугивание: Сл. 15] «Уйди сам, иначе выбью ворота»
-      </button>
-      <button class="choice-btn" onclick="closeDialog()">[Отойти]</button>
-    `;
+    dialogText.innerText = "«Я охраняю восточный рубеж. Докажи, что ты достоин пройти, либо убирайся!»";
+    createChoiceBtn("🎲 [Убеждение: Сл. 12] «Я истребляю разбойников на дороге»", () => {
+      rollD20WithAggro(n, 12);
+    });
+    createChoiceBtn("🎲 [Запугивание: Сл. 15] «Уйди сам, иначе выбью ворота»", () => {
+      rollD20WithAggro(n, 15);
+    });
+    createChoiceBtn("[Отойти назад]", closeDialog);
   } else if (n.id === 'hermit') {
-    dialogText.innerText = "«Озеро хранит древние тайны. Не испытывай моё терпение дурными намерениями...»";
-    dialogOptions.innerHTML = `
-      <button class="choice-btn" onclick="rollDiceWithAggro(n, 11, 'ask')">
-        🎲 [Дипломатия: Сл. 11] «Научи меня тайной магии»
-      </button>
-      <button class="choice-btn" onclick="closeDialog()">[Отойти]</button>
-    `;
+    dialogText.innerText = "«Озеро спокойно, путник. Чего ты ищешь в этих краях?»";
+    createChoiceBtn("🎲 [Дипломатия: Сл. 11] «Научи меня тайной магии»", () => {
+      rollD20WithAggro(n, 11);
+    });
+    createChoiceBtn("[Попрощаться и уйти]", closeDialog);
   }
 }
 
-function buyHeal() {
-  if (player.gold >= 20 && player.hp < player.maxHp) {
-    player.gold -= 20;
-    player.hp = Math.min(player.maxHp, player.hp + 50);
-    updateGoldUI();
-    updateHpUI();
-    triggerHaptic('notification', 'success');
-    closeDialog();
-  }
+function createChoiceBtn(text, onClick) {
+  const btn = document.createElement('button');
+  btn.className = 'choice-btn';
+  btn.innerText = text;
+  // Обработка клика и тача без залипания
+  btn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    triggerHaptic('selection');
+    onClick();
+  }, { passive: false });
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    triggerHaptic('selection');
+    onClick();
+  });
+  dialogOptions.appendChild(btn);
 }
 
-// Бросок кубика D20 с механикой ярости (Aggro при малом значении)
-function rollDiceWithAggro(targetNpc, difficulty, type) {
+function rollD20WithAggro(targetNpc, diff) {
   dialogModal.style.display = 'none';
   diceModal.style.display = 'block';
-  diceStatus.innerText = `Проверка сложности: ${difficulty}`;
+  diceStatus.innerText = `Проверка сложности: ${diff}`;
+  diceStatus.style.color = "#ffffff";
 
   let ticks = 0;
   const interval = setInterval(() => {
     diceVal.innerText = Math.floor(Math.random() * 20) + 1;
+    Sound.play('click');
     triggerHaptic('impact', 'light');
     ticks++;
+
     if (ticks > 12) {
       clearInterval(interval);
       const roll = Math.floor(Math.random() * 20) + 1;
       diceVal.innerText = roll;
 
-      if (roll >= difficulty) {
-        // Успех
+      if (roll >= diff) {
         diceStatus.innerText = "УСПЕХ!";
         diceStatus.style.color = "#4ade80";
         triggerHaptic('notification', 'success');
         setTimeout(() => {
           diceModal.style.display = 'none';
           dialogModal.style.display = 'block';
-          dialogText.innerText = "«Впечатляет! Твоя взяла, вот награда за сговорчивость.»";
+          dialogText.innerText = "«Твоя взяла! Забирай награду за сговорчивость и проходи дальше.»";
           player.gold += 30;
-          updateGoldUI();
-          setQuest("Проход свободен! Исследуйте глубины карты");
-          dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Забрать]</button>`;
+          updateGold();
+          dialogOptions.innerHTML = '';
+          createChoiceBtn("[Забрать и пройти]", closeDialog);
         }, 1200);
       } else if (roll <= 6) {
-        // КРИТИЧЕСКИЙ ПРОВАЛ -> НАПАДЕНИЕ NPC
         diceStatus.innerText = "КРИТ. ПРОВАЛ! ОППОНЕНТ В ЯРОСТИ!";
         diceStatus.style.color = "#ef4444";
         triggerHaptic('notification', 'error');
-
         setTimeout(() => {
           diceModal.style.display = 'none';
-          // Превращаем NPC во врага
           targetNpc.isHostile = true;
-          setQuest(`Побеждать разъяренного: ${targetNpc.name}!`);
-        }, 1500);
+          document.getElementById('quest-hud').innerHTML = `Квест: <span>Победить: ${targetNpc.name}!</span>`;
+        }, 1400);
       } else {
-        // Обычный провал
         diceStatus.innerText = "ПРОВАЛ!";
         diceStatus.style.color = "#f87171";
         triggerHaptic('notification', 'warning');
         setTimeout(() => {
           diceModal.style.display = 'none';
           dialogModal.style.display = 'block';
-          dialogText.innerText = "«Твои слова пусты. Разговор окончен!»";
-          dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Завершить]</button>`;
+          dialogText.innerText = "«Твои слова ничего не стоят. Разговор окончен!»";
+          dialogOptions.innerHTML = '';
+          createChoiceBtn("[Завершить]", closeDialog);
         }, 1200);
       }
     }
-  }, 60);
+  }, 65);
 }
 
 function closeDialog() {
@@ -766,141 +764,139 @@ function closeDialog() {
   actionBtn.style.display = 'none';
 }
 
-function updateHpUI() {
-  const pct = Math.max(0, (player.hp / player.maxHp) * 100);
-  document.getElementById('hp-bar-fill').style.width = `${pct}%`;
-}
-
-// --- ИГРОВОЙ ЦИКЛ, ФИЗИКА И AI МОБОВ ---
+// --- ЦИКЛ И ФИЗИКА ---
 let lastTime = performance.now();
 
 function update(dt) {
-  // Кулдауны скиллов
-  ['s1', 's2', 's3'].forEach((sKey, i) => {
-    const s = player.skills[sKey];
+  // Кулдауны
+  ['s1', 's2', 's3'].forEach(k => {
+    const s = player.skills[k];
     if (s.cdTimer > 0) {
       s.cdTimer = Math.max(0, s.cdTimer - dt);
-      const mask = document.getElementById(`${sKey}-cd`);
-      mask.style.display = s.cdTimer > 0 ? 'flex' : 'none';
-      mask.innerText = Math.ceil(s.cdTimer);
+      const m = document.getElementById(`${k}-cd`);
+      m.style.display = s.cdTimer > 0 ? 'flex' : 'none';
+      m.innerText = Math.ceil(s.cdTimer);
     }
   });
 
-  // Перемещение героя
-  if (player.vx !== 0 || player.vy !== 0) {
-    player.x += player.vx * player.speed * dt;
-    player.y += player.vy * player.speed * dt;
-    player.walkFrame += dt * 10;
-  }
+  // Движение игрока
+  player.x += player.vx * player.speed * dt;
+  player.y += player.vy * player.speed * dt;
   player.x = Math.max(30, Math.min(WORLD.width - 30, player.x));
   player.y = Math.max(30, Math.min(WORLD.height - 30, player.y));
 
-  // AI Врагов (преследование и атака)
+  // AI Врагов
   enemies.forEach(e => {
     const d = Math.hypot(player.x - e.x, player.y - e.y);
-    if (d < 220) e.agro = true;
-    if (e.agro && d > 32) {
-      const ang = Math.atan2(player.y - e.y, player.x - e.x);
-      e.x += Math.cos(ang) * e.speed * dt;
-      e.y += Math.sin(ang) * e.speed * dt;
-
-      // Удар по игроку
+    if (d < 200) e.agro = true;
+    if (e.agro && d > 30) {
+      const a = Math.atan2(player.y - e.y, player.x - e.x);
+      e.x += Math.cos(a) * e.speed * dt;
+      e.y += Math.sin(a) * e.speed * dt;
       if (d < 38 && !player.isInvulnerable) {
         player.hp -= e.dmg * dt;
         updateHpUI();
-        if (player.hp <= 0) respawnPlayer();
+        if (player.hp <= 0) { player.hp = player.maxHp; player.x = 200; player.y = 500; updateHpUI(); }
       }
     }
   });
 
-  // AI Враждебных NPC
+  // Враждебные NPC
   npcs.forEach(n => {
     if (n.isHostile && !n.isDead) {
       const d = Math.hypot(player.x - n.x, player.y - n.y);
       if (d > 30) {
-        const ang = Math.atan2(player.y - n.y, player.x - n.x);
-        n.x += Math.cos(ang) * n.speed * dt;
-        n.y += Math.sin(ang) * n.speed * dt;
+        const a = Math.atan2(player.y - n.y, player.x - n.x);
+        n.x += Math.cos(a) * n.speed * dt;
+        n.y += Math.sin(a) * n.speed * dt;
       }
       if (d < 40 && !player.isInvulnerable) {
         player.hp -= n.dmg * dt;
         updateHpUI();
-        if (player.hp <= 0) respawnPlayer();
+        if (player.hp <= 0) { player.hp = player.maxHp; player.x = 200; player.y = 500; updateHpUI(); }
       }
     }
   });
 
-  // Обновление эффектов
+  // Эффекты
   for (let i = effects.length - 1; i >= 0; i--) {
     effects[i].life -= dt;
     if (effects[i].life <= 0) effects.splice(i, 1);
   }
 
-  // Камера за игроком
+  // Камера
   camera.x = Math.max(0, Math.min(WORLD.width - canvas.width, player.x - canvas.width / 2));
   camera.y = Math.max(0, Math.min(WORLD.height - canvas.height, player.y - canvas.height / 2));
 
-  checkInteractions();
-}
-
-function respawnPlayer() {
-  player.hp = player.maxHp;
-  player.x = 400;
-  player.y = 500;
-  updateHpUI();
-  triggerHaptic('notification', 'error');
-}
-
-// Проверка интерактивности вокруг игрока
-function checkInteractions() {
-  if (dialogModal.style.display === 'block' || diceModal.style.display === 'block') {
-    actionBtn.style.display = 'none';
-    return;
-  }
-
-  // Проверка лута скиллов
-  for (let s of droppedSkills) {
-    if (Math.hypot(player.x - s.x, player.y - s.y) < 40) {
-      currentInteract = { type: 'skill', data: s };
-      actionBtn.innerText = `ВЗЯТЬ: ${s.skill.name}`;
-      actionBtn.style.display = 'block';
-      return;
+  // Проверка взаимодействия
+  if (dialogModal.style.display !== 'block' && diceModal.style.display !== 'block') {
+    let found = false;
+    for (let s of droppedSkills) {
+      if (Math.hypot(player.x - s.x, player.y - s.y) < 45) {
+        currentInteract = { type: 'skill', data: s };
+        actionBtn.innerText = "ВЗЯТЬ";
+        actionBtn.style.display = 'block';
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      for (let n of npcs) {
+        if (!n.isHostile && !n.isDead && Math.hypot(player.x - n.x, player.y - n.y) < 70) {
+          currentInteract = { type: 'npc', data: n };
+          actionBtn.innerText = "ГОВОРИТЬ";
+          actionBtn.style.display = 'block';
+          found = true;
+          break;
+        }
+      }
+    }
+    if (!found) {
+      actionBtn.style.display = 'none';
+      currentInteract = null;
     }
   }
-
-  // Проверка мирных NPC
-  for (let n of npcs) {
-    if (!n.isHostile && !n.isDead && Math.hypot(player.x - n.x, player.y - n.y) < 65) {
-      currentInteract = { type: 'npc', data: n };
-      actionBtn.innerText = "ГОВОРИТЬ";
-      actionBtn.style.display = 'block';
-      return;
-    }
-  }
-
-  actionBtn.style.display = 'none';
-  currentInteract = null;
 }
 
-// --- ОТРИСОВКА МИРА И ГРАФИКИ ---
+// --- ОТРИСОВКА ---
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.save();
   ctx.translate(-camera.x, -camera.y);
 
-  // Сетка травы
+  // Трава
   ctx.fillStyle = "#1e391e";
   ctx.fillRect(0, 0, WORLD.width, WORLD.height);
-  ctx.strokeStyle = "rgba(255,255,255,0.04)";
-  ctx.lineWidth = 1;
-  for (let x = 0; x < WORLD.width; x += 100) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, WORLD.height); ctx.stroke();
-  }
-  for (let y = 0; y < WORLD.height; y += 100) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WORLD.width, y); ctx.stroke();
-  }
 
-  // Дропнутые сферы скиллов
+  // Дороги (гравийные тропинки)
+  ctx.fillStyle = "#6b5d43";
+  roads.forEach(r => {
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+    // Песочные обочины
+    ctx.strokeStyle = "#4e4330";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(r.x, r.y, r.w, r.h);
+  });
+
+  // Указатели
+  signs.forEach(s => {
+    ctx.fillStyle = "#451a03";
+    ctx.fillRect(s.x, s.y, 8, 22);
+    ctx.fillStyle = "#d97706";
+    ctx.fillRect(s.x - 30, s.y - 18, 120, 20);
+    ctx.fillStyle = "#000";
+    ctx.font = "bold 9px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(s.text, s.x + 30, s.y - 5);
+  });
+
+  // Озеро
+  ctx.fillStyle = "#0284c7";
+  ctx.beginPath();
+  ctx.arc(600, 1200, 140, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Дропнутые скиллы
   droppedSkills.forEach(s => {
     ctx.fillStyle = "#38bdf8";
     ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
@@ -909,35 +905,28 @@ function render() {
     ctx.textAlign = "center"; ctx.fillText(s.skill.name, s.x, s.y - 18);
   });
 
-  // Эффекты атак и ульты
+  // Эффекты
   effects.forEach(fx => {
-    ctx.save();
     if (fx.type === 'slash') {
       ctx.strokeStyle = fx.color;
       ctx.lineWidth = 6 * (fx.life / fx.maxLife);
-      ctx.beginPath();
-      ctx.arc(fx.x, fx.y, fx.r, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.beginPath(); ctx.arc(fx.x, fx.y, fx.r, 0, Math.PI * 2); ctx.stroke();
     } else if (fx.type === 'explosion') {
       ctx.fillStyle = `rgba(168, 85, 247, ${fx.life / fx.maxLife * 0.5})`;
-      ctx.beginPath();
-      ctx.arc(fx.x, fx.y, fx.r, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(fx.x, fx.y, fx.r, 0, Math.PI * 2); ctx.fill();
     }
-    ctx.restore();
   });
 
-  // Отрисовка Врагов
+  // Враги
   enemies.forEach(e => {
     ctx.fillStyle = "#dc2626";
     ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke();
-    // HP бар
-    ctx.fillStyle = "#000"; ctx.fillRect(e.x - 18, e.y - 25, 36, 5);
-    ctx.fillStyle = "#ef4444"; ctx.fillRect(e.x - 18, e.y - 25, 36 * (e.hp / e.maxHp), 5);
+    ctx.strokeStyle = "#fff"; ctx.stroke();
+    ctx.fillStyle = "#000"; ctx.fillRect(e.x - 16, e.y - 24, 32, 4);
+    ctx.fillStyle = "#ef4444"; ctx.fillRect(e.x - 16, e.y - 24, 32 * (e.hp / e.maxHp), 4);
   });
 
-  // Отрисовка NPC
+  // NPC
   npcs.forEach(n => {
     if (n.isDead) return;
     ctx.fillStyle = n.isHostile ? "#b91c1c" : (n.id === 'merchant' ? "#10b981" : "#eab308");
@@ -946,18 +935,16 @@ function render() {
     ctx.textAlign = "center"; ctx.fillText(n.name, n.x, n.y - 24);
   });
 
-  // Отрисовка Игрока
+  // Игрок
   ctx.save();
   ctx.translate(player.x, player.y);
-  // Направление взгляда (указатель)
   ctx.strokeStyle = "#facc15";
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(0, 0);
-  ctx.lineTo(Math.cos(player.faceAngle) * 26, Math.sin(player.faceAngle) * 26);
+  ctx.lineTo(Math.cos(player.faceAngle) * 24, Math.sin(player.faceAngle) * 24);
   ctx.stroke();
 
-  // Тело
   ctx.fillStyle = "#2563eb";
   ctx.beginPath(); ctx.arc(0, 0, player.r, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2.5; ctx.stroke();
@@ -966,7 +953,6 @@ function render() {
   ctx.restore();
 }
 
-// Главный цикл
 function loop(now) {
   const dt = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
@@ -974,8 +960,6 @@ function loop(now) {
   render();
   requestAnimationFrame(loop);
 }
-
-loadProgress();
 requestAnimationFrame(loop);
 </script>
 </body>

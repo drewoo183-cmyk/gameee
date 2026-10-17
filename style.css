@@ -73,7 +73,9 @@ canvas {
 #joystick-base {
   position: absolute;
   bottom: 40px;
-  left: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+
   width: 120px;
   height: 120px;
   background: rgba(255, 255, 255, 0.15);
@@ -98,8 +100,8 @@ canvas {
 #action-btn {
   display: none;
   position: absolute;
-  bottom: 50px;
-  right: 35px;
+  bottom: 110px;
+  left: calc(50% + 75px);
   width: 75px;
   height: 75px;
   border-radius: 50%;
@@ -262,4 +264,32 @@ canvas {
   color: #fff;
   font-size: 13.5px;
   text-align: left;
+}
+/* Миникарта */
+#minimap-container {
+  position: absolute;
+  top: 65px;
+  right: 14px;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 2px solid #f59e0b;
+  background: rgba(15, 23, 42, 0.85);
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 10;
+}
+#minimap-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Цифры в бою */
+.bar-num {
+  font-size: 10px;
+  font-weight: bold;
+  color: #cbd5e1;
+  margin-top: 2px;
+  text-align: center;
 }

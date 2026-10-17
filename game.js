@@ -1,6 +1,7 @@
-он// --- ИНИЦИАЛИЗАЦИЯ TELEGRAM ---
+// --- ИНИЦИАЛИЗАЦИЯ TELEGRAM ---
 const tg = window.Telegram?.WebApp;
 let telegramUser = "Герой";
+
 if (tg) {
   tg.ready();
   tg.expand();
@@ -9,8 +10,11 @@ if (tg) {
     telegramUser = tg.initDataUnsafe.user.first_name;
   }
 }
-document.getElementById('hero-name-label').innerText = telegramUser;
-document.getElementById('combat-player-name').innerText = telegramUser;
+
+const heroNameEl = document.getElementById('hero-name-label');
+if (heroNameEl) heroNameEl.innerText = telegramUser;
+const combatPlayerEl = document.getElementById('combat-player-name');
+if (combatPlayerEl) combatPlayerEl.innerText = telegramUser;
 
 function triggerHaptic(type = 'impact', style = 'medium') {
   if (tg?.HapticFeedback) {
@@ -64,7 +68,7 @@ const Sound = {
 window.addEventListener('touchstart', () => Sound.init(), { once: true });
 window.addEventListener('click', () => Sound.init(), { once: true });
 
-// --- ХОЛСТ И МИР ---
+// --- ХОЛСТ МИРА ---
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
@@ -78,7 +82,7 @@ resize();
 const WORLD = { width: 1800, height: 1400 };
 const camera = { x: 0, y: 0 };
 
-// ИГРОК С ХАРАКТЕРИСТИКАМИ HP И MANA
+// ПАРАМЕТРЫ ИГРОКА
 const player = {
   x: 200,
   y: 450,
@@ -99,7 +103,7 @@ const player = {
   ]
 };
 
-// СУНДУК С ОРУЖИЕМ
+// СУНДУК
 const chest = {
   x: 520,
   y: 750,
@@ -110,17 +114,19 @@ const chest = {
   bonusSkill: { id: 'thunder', name: "Громовой раскол ⚡", baseDmg: 55, manaCost: 45 }
 };
 
-// ВРАГИ НА КАРТЕ
+// ВРАГИ
 const enemies = [
   { id: 1, x: 650, y: 450, r: 18, name: "Разбойник", hp: 65, maxHp: 65, dmg: 14, icon: "🥷" },
   { id: 2, x: 950, y: 450, r: 20, name: "Орк-Страж", hp: 110, maxHp: 110, dmg: 20, icon: "👹" },
   { id: 3, x: 450, y: 1100, r: 18, name: "Болотный Бес", hp: 75, maxHp: 75, dmg: 16, icon: "👺" }
 ];
 
+// NPC
 const npcs = [
   { id: 'doc', x: 280, y: 320, r: 18, name: "Знахарь Лагеря" }
 ];
 
+// ДОРОГИ
 const roads = [
   { x: 80, y: 420, w: 1200, h: 60 },
   { x: 490, y: 480, w: 60, h: 400 },
@@ -182,7 +188,7 @@ function handleJoyMove(cx, cy) {
   }
 }
 
-// --- БОЕВАЯ АРЕНА (БОЙ, КУБИК, МАНА) ---
+// --- БОЕВАЯ АРЕНА ---
 const combatArena = document.getElementById('combat-arena');
 const combatDiceBox = document.getElementById('combat-dice-box');
 const combatLog = document.getElementById('combat-log');
@@ -240,7 +246,6 @@ function updateArenaBars() {
   if (topMp) topMp.style.width = `${mpPct}%`;
 }
 
-
 function renderCombatSkills() {
   combatSkillsGrid.innerHTML = '';
   player.skills.forEach(skill => {
@@ -268,7 +273,6 @@ function renderCombatSkills() {
 
 function executePlayerSkill(skill) {
   isRolling = true;
-  // Списываем ману
   player.mp = Math.max(0, player.mp - skill.manaCost);
   updateArenaBars();
   renderCombatSkills();
@@ -348,13 +352,12 @@ function enemyTurn() {
       const enemyDmg = Math.round(activeEnemy.dmg * eMult);
       
       player.hp -= enemyDmg;
-      // Восстанавливаем 10 MP за ход
       player.mp = Math.min(player.maxMp, player.mp + 10);
 
       updateArenaBars();
       Sound.play('hit');
       triggerHaptic('notification', 'error');
-      combatLog.innerText = `${activeEnemy.name} выбросил ${eRoll} и нанес вам ${enemyDmg} урона! (+10 MP)`;
+      combatLog.innerText = `${activeEnemy.name} выбросил ${eRoll} и нанес ${enemyDmg} урона! (+10 MP)`;
 
       if (player.hp <= 0) {
         setTimeout(loseCombat, 1200);
@@ -422,7 +425,7 @@ function openChest() {
   triggerHaptic('notification', 'success');
 
   dialogName.innerText = "Оружейный Сундук";
-  dialogText.innerText = `Вы открыли кованый сундук и достали «${chest.item}»! Открыт новый разрушительный навык: «${chest.bonusSkill.name}» (требует 45 MP).`;
+  dialogText.innerText = `Вы открыли кованый сундук и достали «${chest.item}»! Открыт 3-й навык: «${chest.bonusSkill.name}» (требует 45 MP).`;
   dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Взять в руку]</button>`;
   dialogModal.style.display = 'block';
   actionBtn.style.display = 'none';
@@ -456,7 +459,49 @@ function closeDialog() {
   actionBtn.style.display = 'none';
 }
 
-// --- ФИЗИКА И ЦИКЛ ---
+// --- МИНИКАРТА ---
+const minimapCanvas = document.getElementById('minimap-canvas');
+const mCtx = minimapCanvas ? minimapCanvas.getContext('2d') : null;
+
+function renderMinimap() {
+  if (!mCtx) return;
+  const mW = minimapCanvas.width;
+  const mH = minimapCanvas.height;
+  const scaleX = mW / WORLD.width;
+  const scaleY = mH / WORLD.height;
+
+  mCtx.clearRect(0, 0, mW, mH);
+  mCtx.fillStyle = "#162b16";
+  mCtx.fillRect(0, 0, mW, mH);
+
+  // Дороги
+  mCtx.fillStyle = "#5c4f39";
+  roads.forEach(r => {
+    mCtx.fillRect(r.x * scaleX, r.y * scaleY, r.w * scaleX, r.h * scaleY);
+  });
+
+  // Сундук
+  if (!chest.opened) {
+    mCtx.fillStyle = "#facc15";
+    mCtx.fillRect(chest.x * scaleX - 2, chest.y * scaleY - 2, 5, 5);
+  }
+
+  // Враги
+  mCtx.fillStyle = "#ef4444";
+  enemies.forEach(e => {
+    mCtx.beginPath();
+    mCtx.arc(e.x * scaleX, e.y * scaleY, 2.5, 0, Math.PI * 2);
+    mCtx.fill();
+  });
+
+  // Игрок
+  mCtx.fillStyle = "#38bdf8";
+  mCtx.beginPath();
+  mCtx.arc(player.x * scaleX, player.y * scaleY, 3.5, 0, Math.PI * 2);
+  mCtx.fill();
+}
+
+// --- ОСНОВНОЙ ЦИКЛ ОБНОВЛЕНИЯ И ОТРИСОВКИ ---
 let lastTime = performance.now();
 
 function update(dt) {
@@ -470,7 +515,7 @@ function update(dt) {
   player.x = Math.max(30, Math.min(WORLD.width - 30, player.x));
   player.y = Math.max(30, Math.min(WORLD.height - 30, player.y));
 
-  // Столкновение с врагами
+  // Столкновение с врагами (старт боя)
   enemies.forEach(e => {
     const d = Math.hypot(player.x - e.x, player.y - e.y);
     if (d < 48) {
@@ -500,44 +545,6 @@ function update(dt) {
   }
 }
 
-// --- ОТРИСОВКА ---
-const minimapCanvas = document.getElementById('minimap-canvas');
-const mCtx = minimapCanvas ? minimapCanvas.getContext('2d') : null;
-
-function renderMinimap() {
-  if (!mCtx) return;
-  const mW = minimapCanvas.width;
-  const mH = minimapCanvas.height;
-  const scaleX = mW / WORLD.width;
-  const scaleY = mH / WORLD.height;
-
-  mCtx.clearRect(0, 0, mW, mH);
-  mCtx.fillStyle = "#162b16";
-  mCtx.fillRect(0, 0, mW, mH);
-
-  mCtx.fillStyle = "#5c4f39";
-  roads.forEach(r => {
-    mCtx.fillRect(r.x * scaleX, r.y * scaleY, r.w * scaleX, r.h * scaleY);
-  });
-
-  if (!chest.opened) {
-    mCtx.fillStyle = "#facc15";
-    mCtx.fillRect(chest.x * scaleX - 2, chest.y * scaleY - 2, 5, 5);
-  }
-
-  mCtx.fillStyle = "#ef4444";
-  enemies.forEach(e => {
-    mCtx.beginPath();
-    mCtx.arc(e.x * scaleX, e.y * scaleY, 2.5, 0, Math.PI * 2);
-    mCtx.fill();
-  });
-
-  mCtx.fillStyle = "#38bdf8";
-  mCtx.beginPath();
-  mCtx.arc(player.x * scaleX, player.y * scaleY, 3.5, 0, Math.PI * 2);
-  mCtx.fill();
-}
-
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.save();
@@ -554,10 +561,7 @@ function render() {
     ctx.strokeStyle = "#4e4330";
     ctx.lineWidth = 3;
     ctx.strokeRect(r.x, r.y, r.w, r.h);
-      renderMinimap();
-
   });
-  
 
   // Сундук
   ctx.fillStyle = chest.opened ? "#451a03" : "#b45309";
@@ -570,7 +574,7 @@ function render() {
     ctx.fillText("ОРУЖИЕ", chest.x + 16, chest.y - 8);
   }
 
-  // Лекарь NPC
+  // Знахарь NPC
   ctx.fillStyle = "#10b981";
   ctx.beginPath(); ctx.arc(npcs[0].x, npcs[0].y, npcs[0].r, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = "#fff"; ctx.stroke();
@@ -605,6 +609,9 @@ function render() {
   ctx.restore();
 
   ctx.restore();
+
+  // Отрисовка миникарты поверх всего
+  renderMinimap();
 }
 
 function loop(now) {
@@ -614,4 +621,7 @@ function loop(now) {
   render();
   requestAnimationFrame(loop);
 }
+
+// Запуск игры
+resize();
 requestAnimationFrame(loop);

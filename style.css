@@ -1,0 +1,265 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+#game-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #1e391e;
+}
+
+/* Верхний HUD */
+#top-bar {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 10;
+}
+.hud-card {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 8px 12px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.hud-card span { color: #f59e0b; }
+
+#hp-bar-wrap, #mp-bar-wrap {
+  width: 90px;
+  height: 7px;
+  background: #334155;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+#hp-bar-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444, #22c55e);
+}
+#mp-bar-fill {
+  width: 100%;
+  height: 100%;
+  background: #3b82f6;
+}
+
+/* Джойстик */
+#joystick-base {
+  position: absolute;
+  bottom: 40px;
+  left: 30px;
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  touch-action: none;
+  z-index: 10;
+}
+#joystick-stick {
+  position: absolute;
+  top: 35px;
+  left: 35px;
+  width: 50px;
+  height: 50px;
+  background: radial-gradient(circle, #f8fafc, #94a3b8);
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+/* Кнопка действия */
+#action-btn {
+  display: none;
+  position: absolute;
+  bottom: 50px;
+  right: 35px;
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  background: #f59e0b;
+  border: 3px solid #fff;
+  color: #000;
+  font-weight: 900;
+  font-size: 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+  z-index: 10;
+  touch-action: manipulation;
+}
+
+/* Пошаговая Арена */
+#combat-arena {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 15, 29, 0.95);
+  z-index: 40;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px 20px 40px;
+  backdrop-filter: blur(8px);
+}
+.combat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #fff;
+}
+.combat-fighter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 45%;
+}
+.fighter-avatar {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+.fighter-bar {
+  width: 100%;
+  height: 8px;
+  background: #334155;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+.fighter-fill {
+  width: 100%;
+  height: 100%;
+  background: #22c55e;
+  transition: width 0.2s ease;
+}
+
+#combat-dice-zone {
+  text-align: center;
+  color: #fff;
+  margin: 15px 0;
+}
+#combat-dice-box {
+  width: 85px;
+  height: 85px;
+  margin: 8px auto;
+  border: 3px solid #f59e0b;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  font-weight: 900;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+#combat-log {
+  font-size: 13.5px;
+  min-height: 40px;
+  color: #cbd5e1;
+  padding: 0 10px;
+}
+
+/* Сетка скиллов */
+#combat-skills-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  width: 100%;
+}
+.combat-skill-btn {
+  background: #1e293b;
+  border: 1px solid #475569;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.combat-skill-btn .skill-title {
+  font-weight: 700;
+  font-size: 14px;
+}
+.combat-skill-btn .skill-meta {
+  text-align: right;
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+.combat-skill-btn .skill-meta span {
+  color: #38bdf8;
+  font-weight: bold;
+}
+.combat-skill-btn.disabled {
+  opacity: 0.45;
+  filter: grayscale(1);
+  pointer-events: none;
+}
+.combat-skill-btn:active {
+  background: #334155;
+  border-color: #f59e0b;
+}
+
+/* Диалог */
+#dialog-modal {
+  display: none;
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 24px;
+  background: rgba(15, 23, 42, 0.98);
+  border: 2px solid #eab308;
+  border-radius: 16px;
+  padding: 18px;
+  color: #f8fafc;
+  z-index: 30;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+}
+#dialog-name { color: #facc15; font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+#dialog-text { font-size: 14px; line-height: 1.4; margin-bottom: 12px; color: #cbd5e1; }
+.choice-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13.5px;
+  text-align: left;
+}

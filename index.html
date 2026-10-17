@@ -20,24 +20,13 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* Автоповорот в ландшафт (альбомный режим), если телефон держат вертикально */
     #landscape-wrapper {
-      position: absolute;
-      top: 0;
-      left: 0;
+      position: relative;
       width: 100vw;
       height: 100vh;
       overflow: hidden;
     }
-    @media screen and (orientation: portrait) {
-      #landscape-wrapper {
-        width: 100vh;
-        height: 100vw;
-        transform: rotate(90deg);
-        transform-origin: top left;
-        left: 100vw;
-      }
-    }
+
 
     #game-container {
       position: relative;
@@ -322,10 +311,7 @@ let telegramUser = "Герой";
 if (tg) {
   tg.ready();
   tg.expand();
-  // Блокировка альбомной ориентации для новых версий Telegram
-  if (tg.lockOrientation) {
-    try { tg.lockOrientation(); } catch(e) {}
-  }
+
   if (tg.initDataUnsafe?.user?.first_name) {
     telegramUser = tg.initDataUnsafe.user.first_name;
   }

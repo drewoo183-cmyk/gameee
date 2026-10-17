@@ -554,7 +554,10 @@ function render() {
     ctx.strokeStyle = "#4e4330";
     ctx.lineWidth = 3;
     ctx.strokeRect(r.x, r.y, r.w, r.h);
+      renderMinimap();
+
   });
+  
 
   // Сундук
   ctx.fillStyle = chest.opened ? "#451a03" : "#b45309";

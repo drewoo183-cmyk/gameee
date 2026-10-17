@@ -23,6 +23,10 @@
     <div class="hud-card">Золото: <span id="gold-val">0</span> 🪙</div>
     <div class="hud-card" id="inv-hud">Оружие: <span>Ржавый нож</span></div>
   </div>
+  <!-- Миникарта -->
+  <div id="minimap-container">
+    <canvas id="minimap-canvas" width="84" height="84"></canvas>
+  </div>
 
   <!-- Джойстик -->
   <div id="joystick-base"><div id="joystick-stick"></div></div>
@@ -32,20 +36,24 @@
 
   <!-- Пошаговая Боевая Арена -->
   <div id="combat-arena">
-    <div class="combat-header">
+       <div class="combat-header">
       <div class="combat-fighter">
         <div class="fighter-avatar" style="background:#2563eb;">🧙‍♂️</div>
         <div style="font-weight:bold; font-size:13px;" id="combat-player-name">Герой</div>
         <div class="fighter-bar"><div class="fighter-fill" id="arena-player-hp"></div></div>
+        <div class="bar-num" id="arena-player-hp-text">100 / 100 HP</div>
         <div class="fighter-bar" style="margin-top:4px;"><div class="fighter-fill" id="arena-player-mp" style="background:#3b82f6;"></div></div>
+        <div class="bar-num" id="arena-player-mp-text" style="color:#60a5fa;">100 / 100 MP</div>
       </div>
       <div style="font-weight:900; font-size:22px; color:#ef4444;">VS</div>
       <div class="combat-fighter">
         <div class="fighter-avatar" style="background:#dc2626;" id="arena-enemy-avatar">👹</div>
         <div style="font-weight:bold; font-size:13px;" id="arena-enemy-name">Враг</div>
         <div class="fighter-bar"><div class="fighter-fill" id="arena-enemy-hp" style="background:#ef4444;"></div></div>
+        <div class="bar-num" id="arena-enemy-hp-text" style="color:#f87171;">65 / 65 HP</div>
       </div>
     </div>
+
 
     <div id="combat-dice-zone">
       <div style="font-size:12px; color:#94a3b8; font-weight:700;">КУБИК УРОНА D20</div>

@@ -19,7 +19,7 @@ html, body {
   height: 100vh;
   overflow: hidden;
 }
-canvas {
+canvas#canvas {
   display: block;
   width: 100%;
   height: 100%;
@@ -69,13 +69,33 @@ canvas {
   background: #3b82f6;
 }
 
-/* Джойстик */
+/* Миникарта */
+#minimap-container {
+  position: absolute;
+  top: 75px;
+  right: 14px;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 2px solid #f59e0b;
+  background: rgba(15, 23, 42, 0.9);
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+#minimap-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Джойстик строго по центру снизу */
 #joystick-base {
   position: absolute;
-  bottom: 40px;
+  bottom: 35px;
   left: 50%;
   transform: translateX(-50%);
-
   width: 120px;
   height: 120px;
   background: rgba(255, 255, 255, 0.15);
@@ -96,31 +116,31 @@ canvas {
   box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
 
-/* Кнопка действия */
+/* Кнопка действия (справа сверху от центрального джойстика) */
 #action-btn {
   display: none;
   position: absolute;
-  bottom: 110px;
-  left: calc(50% + 75px);
-  width: 75px;
-  height: 75px;
+  bottom: 125px;
+  left: calc(50% + 70px);
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   background: #f59e0b;
   border: 3px solid #fff;
   color: #000;
   font-weight: 900;
-  font-size: 12px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
-  z-index: 10;
+  font-size: 11px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+  z-index: 12;
   touch-action: manipulation;
 }
 
-/* Пошаговая Арена */
+/* Пошаговая Боевая Арена */
 #combat-arena {
   display: none;
   position: absolute;
   inset: 0;
-  background: rgba(10, 15, 29, 0.95);
+  background: rgba(10, 15, 29, 0.96);
   z-index: 40;
   flex-direction: column;
   justify-content: space-between;
@@ -144,7 +164,7 @@ canvas {
   height: 65px;
   border-radius: 50%;
   border: 3px solid #fff;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -163,6 +183,13 @@ canvas {
   height: 100%;
   background: #22c55e;
   transition: width 0.2s ease;
+}
+.bar-num {
+  font-size: 10px;
+  font-weight: bold;
+  color: #cbd5e1;
+  margin-top: 2px;
+  text-align: center;
 }
 
 #combat-dice-zone {
@@ -192,7 +219,7 @@ canvas {
   padding: 0 10px;
 }
 
-/* Сетка скиллов */
+/* Сетка скиллов в бою */
 #combat-skills-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -236,7 +263,7 @@ canvas {
   border-color: #f59e0b;
 }
 
-/* Диалог */
+/* Окно диалогов */
 #dialog-modal {
   display: none;
   position: absolute;
@@ -264,32 +291,4 @@ canvas {
   color: #fff;
   font-size: 13.5px;
   text-align: left;
-}
-/* Миникарта */
-#minimap-container {
-  position: absolute;
-  top: 65px;
-  right: 14px;
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  border: 2px solid #f59e0b;
-  background: rgba(15, 23, 42, 0.85);
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 10;
-}
-#minimap-canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-/* Цифры в бою */
-.bar-num {
-  font-size: 10px;
-  font-weight: bold;
-  color: #cbd5e1;
-  margin-top: 2px;
-  text-align: center;
 }

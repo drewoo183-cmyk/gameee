@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>2D Dice Turn-Based RPG</title>
+  <title>2D Dice RPG</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Подключение стилей -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -23,20 +22,21 @@
     <div class="hud-card">Золото: <span id="gold-val">0</span> 🪙</div>
     <div class="hud-card" id="inv-hud">Оружие: <span>Ржавый нож</span></div>
   </div>
-  <!-- Миникарта -->
+
+  <!-- Миникарта в правом верхнем углу -->
   <div id="minimap-container">
     <canvas id="minimap-canvas" width="84" height="84"></canvas>
   </div>
 
-  <!-- Джойстик -->
+  <!-- Джойстик по центру -->
   <div id="joystick-base"><div id="joystick-stick"></div></div>
 
-  <!-- Кнопка действия -->
+  <!-- Кнопка действия (справа сверху от джойстика) -->
   <button id="action-btn">ДЕЙСТВИЕ</button>
 
   <!-- Пошаговая Боевая Арена -->
   <div id="combat-arena">
-       <div class="combat-header">
+    <div class="combat-header">
       <div class="combat-fighter">
         <div class="fighter-avatar" style="background:#2563eb;">🧙‍♂️</div>
         <div style="font-weight:bold; font-size:13px;" id="combat-player-name">Герой</div>
@@ -54,18 +54,17 @@
       </div>
     </div>
 
-
     <div id="combat-dice-zone">
       <div style="font-size:12px; color:#94a3b8; font-weight:700;">КУБИК УРОНА D20</div>
       <div id="combat-dice-box">--</div>
       <div id="combat-log">Выберите умение для атаки!</div>
     </div>
 
-    <!-- Список скиллов -->
+    <!-- Кнопки скиллов в бою -->
     <div id="combat-skills-grid"></div>
   </div>
 
-  <!-- Диалоговое окно -->
+  <!-- Диалог -->
   <div id="dialog-modal">
     <div id="dialog-name">Собеседник</div>
     <div id="dialog-text">...</div>
@@ -73,7 +72,6 @@
   </div>
 </div>
 
-<!-- Подключение логики игры -->
 <script src="game.js"></script>
 </body>
 </html>

@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Telegram RPG Mini App</title>
-  <!-- Telegram WebApp SDK -->
+  <title>Telegram 2D MOBA RPG</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * {
@@ -19,7 +18,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #12151a;
+      background: #0b0f19;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     #game-container {
@@ -31,42 +30,56 @@
       display: block;
       width: 100%;
       height: 100%;
-      background: #1e3a1e;
-      image-rendering: pixelated;
+      background: #192a18;
     }
 
-    /* Верхняя панель статов и инвентаря */
+    /* Верхний интерфейс (HUD) */
     #top-bar {
       position: absolute;
-      top: 14px;
-      left: 14px;
-      right: 14px;
+      top: 10px;
+      left: 10px;
+      right: 10px;
       display: flex;
       justify-content: space-between;
+      gap: 6px;
       pointer-events: none;
       z-index: 10;
     }
-    .hud-badge {
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 8px 12px;
+    .hud-card {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 10px;
       border-radius: 10px;
       color: #fff;
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: bold;
       backdrop-filter: blur(4px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
-    .hud-badge span { color: #facc15; }
+    .hud-card span { color: #f59e0b; }
+    #hp-bar-wrap {
+      width: 110px;
+      height: 10px;
+      background: #334155;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 3px;
+      border: 1px solid #000;
+    }
+    #hp-bar-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #ef4444, #22c55e);
+      transition: width 0.15s ease;
+    }
 
-    /* Джойстик */
+    /* Виртуальный джойстик ходьбы (слева) */
     #joystick-base {
       position: absolute;
-      bottom: 35px;
-      left: 25px;
-      width: 120px;
-      height: 120px;
-      background: rgba(255, 255, 255, 0.15);
+      bottom: 30px;
+      left: 20px;
+      width: 115px;
+      height: 115px;
+      background: rgba(255, 255, 255, 0.14);
       border: 2px solid rgba(255, 255, 255, 0.35);
       border-radius: 50%;
       touch-action: none;
@@ -74,111 +87,150 @@
     }
     #joystick-stick {
       position: absolute;
-      top: 35px;
-      left: 35px;
+      top: 32px;
+      left: 32px;
       width: 50px;
       height: 50px;
       background: radial-gradient(circle, #f8fafc, #94a3b8);
       border-radius: 50%;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       pointer-events: none;
-      transform: translate3d(0, 0, 0);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
 
-    /* Кнопка действия */
+    /* Блок боевых скиллов (в стиле MLBB / справа) */
+    #skills-container {
+      position: absolute;
+      bottom: 25px;
+      right: 20px;
+      width: 180px;
+      height: 180px;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .skill-btn {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      color: #fff;
+      font-weight: 900;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+      pointer-events: auto;
+      touch-action: manipulation;
+    }
+    .skill-btn:active { transform: scale(0.92); }
+    .skill-cd-mask {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: #f87171;
+    }
+
+    /* Кнопка Базовой Атаки */
+    #btn-attack {
+      width: 68px;
+      height: 68px;
+      bottom: 5px;
+      right: 5px;
+      background: linear-gradient(135deg, #e11d48, #9f1239);
+      font-size: 14px;
+      border-width: 3px;
+    }
+    /* Скилл 1 (Урон) */
+    #btn-skill-1 {
+      width: 50px;
+      height: 50px;
+      bottom: 10px;
+      right: 90px;
+      background: linear-gradient(135deg, #f59e0b, #b45309);
+    }
+    /* Скилл 2 (Блинк / Эскейп) */
+    #btn-skill-2 {
+      width: 50px;
+      height: 50px;
+      bottom: 75px;
+      right: 75px;
+      background: linear-gradient(135deg, #06b6d4, #0e7490);
+    }
+    /* Скилл 3 (Ультимейт) */
+    #btn-skill-3 {
+      width: 54px;
+      height: 54px;
+      bottom: 95px;
+      right: 10px;
+      background: linear-gradient(135deg, #8b5cf6, #5b21b6);
+      border-color: #facc15;
+    }
+
+    /* Кнопка Взаимодействия (Диалог / Лут) */
     #action-btn {
       display: none;
       position: absolute;
-      bottom: 45px;
-      right: 25px;
-      width: 82px;
-      height: 82px;
+      bottom: 110px;
+      left: 145px;
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      border: 3px solid #fff;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 800;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+      background: #facc15;
+      color: #000;
+      font-size: 11px;
+      font-weight: 900;
+      border: 2px solid #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       z-index: 10;
       touch-action: manipulation;
     }
-    #action-btn:active {
-      transform: scale(0.92);
-    }
 
-    /* Диалоговое окно */
-    #dialog-modal {
+    /* Модалки: Диалоги, Кубик, Смена Скилла */
+    .game-modal {
       display: none;
       position: absolute;
-      left: 14px;
-      right: 14px;
-      bottom: 24px;
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(15, 23, 42, 0.96);
       border: 2px solid #eab308;
       border-radius: 16px;
-      padding: 18px;
-      color: #f3f4f6;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.8);
+      padding: 16px;
+      color: #f8fafc;
       z-index: 20;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.85);
     }
-    #dialog-name {
-      color: #facc15;
-      font-size: 16px;
-      font-weight: 800;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    #dialog-modal {
+      left: 12px;
+      right: 12px;
+      bottom: 20px;
     }
-    #dialog-text {
-      font-size: 14px;
-      line-height: 1.45;
-      margin-bottom: 14px;
-      color: #cbd5e1;
-    }
+    #dialog-name { color: #facc15; font-size: 15px; font-weight: 800; margin-bottom: 6px; }
+    #dialog-text { font-size: 13.5px; line-height: 1.4; margin-bottom: 12px; color: #cbd5e1; }
     .choice-btn {
       display: block;
       width: 100%;
-      padding: 12px 14px;
-      margin-top: 8px;
+      padding: 10px 12px;
+      margin-top: 6px;
       background: #1e293b;
       border: 1px solid #334155;
-      border-radius: 10px;
+      border-radius: 8px;
       color: #fff;
-      font-size: 13.5px;
+      font-size: 13px;
       text-align: left;
-      cursor: pointer;
     }
-    .choice-btn:active { background: #334155; }
 
-    /* Оверлей кости D20 */
     #dice-modal {
-      display: none;
-      position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(10, 15, 29, 0.96);
-      border: 2px solid #ef4444;
-      border-radius: 20px;
-      padding: 24px 32px;
       text-align: center;
-      color: #fff;
-      z-index: 30;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.9);
-      min-width: 240px;
+      min-width: 220px;
+      border-color: #ef4444;
     }
-    #dice-val {
-      font-size: 64px;
-      font-weight: 900;
-      color: #f59e0b;
-      margin: 8px 0;
-      text-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
-    }
-    #dice-status {
-      font-size: 15px;
-      font-weight: 700;
-    }
+    #dice-val { font-size: 60px; font-weight: 900; color: #f59e0b; margin: 8px 0; }
   </style>
 </head>
 <body>
@@ -186,37 +238,69 @@
 <div id="game-container">
   <canvas id="canvas"></canvas>
 
+  <!-- Верхняя строка HUD -->
   <div id="top-bar">
-    <div class="hud-badge" id="stats-hud">ХАР: <span>+2</span> | СИЛ: <span>+1</span></div>
-    <div class="hud-badge" id="inv-hud">Сумка: <span>Пусто</span></div>
+    <div class="hud-card">
+      <div id="hero-name-label">Игрок: Герой</div>
+      <div id="hp-bar-wrap"><div id="hp-bar-fill"></div></div>
+    </div>
+    <div class="hud-card">Золото: <span id="gold-val">0</span> 🪙</div>
+    <div class="hud-card" id="quest-hud">Квест: <span>Осмотрите окрестности</span></div>
   </div>
 
-  <div id="joystick-base">
-    <div id="joystick-stick"></div>
-  </div>
+  <!-- Джойстик передвижения -->
+  <div id="joystick-base"><div id="joystick-stick"></div></div>
 
+  <!-- Кнопка контекстного действия -->
   <button id="action-btn">ДЕЙСТВИЕ</button>
 
-  <div id="dialog-modal">
-    <div id="dialog-name">NPC</div>
-    <div id="dialog-text">Приветствую, странник.</div>
+  <!-- Панель управления скиллами MOBA -->
+  <div id="skills-container">
+    <button class="skill-btn" id="btn-attack">ATK</button>
+
+    <button class="skill-btn" id="btn-skill-1">
+      <span id="s1-label">Вихрь</span>
+      <div class="skill-cd-mask" id="s1-cd"></div>
+    </button>
+
+    <button class="skill-btn" id="btn-skill-2">
+      <span id="s2-label">Блинк</span>
+      <div class="skill-cd-mask" id="s2-cd"></div>
+    </button>
+
+    <button class="skill-btn" id="btn-skill-3">
+      <span id="s3-label">Ульта</span>
+      <div class="skill-cd-mask" id="s3-cd"></div>
+    </button>
+  </div>
+
+  <!-- Окно Диалогов -->
+  <div class="game-modal" id="dialog-modal">
+    <div id="dialog-name">Собеседник</div>
+    <div id="dialog-text">...</div>
     <div id="dialog-options"></div>
   </div>
 
-  <div id="dice-modal">
-    <div style="font-size:13px; color:#94a3b8; font-weight:700;">ПРОВЕРКА КУБИКА D20</div>
+  <!-- Окно броска D20 -->
+  <div class="game-modal" id="dice-modal">
+    <div style="font-size:12px; color:#94a3b8; font-weight:700;">ПРОВЕРКА D20</div>
     <div id="dice-val">--</div>
-    <div id="dice-status">Бросок...</div>
+    <div id="dice-status" style="font-size:14px; font-weight:bold;">Бросок...</div>
   </div>
 </div>
 
 <script>
-// --- ИНИЦИАЛИЗАЦИЯ TELEGRAM WEBAPP ---
+// --- ИНИЦИАЛИЗАЦИЯ И ОБЛАЧНОЕ СОХРАНЕНИЕ TELEGRAM ---
 const tg = window.Telegram?.WebApp;
+let telegramUser = "Герой";
 if (tg) {
   tg.ready();
   tg.expand();
+  if (tg.initDataUnsafe?.user?.first_name) {
+    telegramUser = tg.initDataUnsafe.user.first_name;
+  }
 }
+document.getElementById('hero-name-label').innerText = `${telegramUser}`;
 
 function triggerHaptic(type = 'impact', style = 'medium') {
   if (tg?.HapticFeedback) {
@@ -224,210 +308,324 @@ function triggerHaptic(type = 'impact', style = 'medium') {
     else if (type === 'notification') tg.HapticFeedback.notificationOccurred(style);
     else if (type === 'selection') tg.HapticFeedback.selectionChanged();
   } else if (navigator.vibrate) {
-    navigator.vibrate(type === 'notification' ? 100 : 30);
+    navigator.vibrate(type === 'notification' ? 80 : 25);
   }
 }
 
-// --- WEB AUDIO API (ПРОЦЕДУРНЫЕ ЗВУКИ) ---
-const AudioEngine = {
+// Сохранение и загрузка прогресса
+function saveProgress() {
+  const data = JSON.stringify({
+    gold: player.gold,
+    s1: player.skills.s1.id,
+    s2: player.skills.s2.id,
+    s3: player.skills.s3.id,
+    quest: currentQuest
+  });
+  if (tg?.CloudStorage) tg.CloudStorage.setItem('rpg_save', data);
+  localStorage.setItem('rpg_save', data);
+}
+
+function loadProgress() {
+  const raw = localStorage.getItem('rpg_save');
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      player.gold = parsed.gold || 0;
+      if (parsed.s1 && SKILL_DATABASE[parsed.s1]) player.skills.s1 = { ...SKILL_DATABASE[parsed.s1] };
+      if (parsed.s2 && SKILL_DATABASE[parsed.s2]) player.skills.s2 = { ...SKILL_DATABASE[parsed.s2] };
+      if (parsed.s3 && SKILL_DATABASE[parsed.s3]) player.skills.s3 = { ...SKILL_DATABASE[parsed.s3] };
+      if (parsed.quest) setQuest(parsed.quest);
+      updateSkillLabels();
+      updateGoldUI();
+    } catch (e) {}
+  }
+}
+
+// --- ЗВУКОВОЙ ДВИЖОК (WEB AUDIO) ---
+const Sound = {
   ctx: null,
   init() {
     if (!this.ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (AudioCtx) this.ctx = new AudioCtx();
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) this.ctx = new AC();
     }
   },
-  playStep() {
+  play(type) {
     if (!this.ctx) return;
+    const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    osc.frequency.setValueAtTime(90, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.05);
-    gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.05);
-  },
-  playDiceClick() {
-    if (!this.ctx) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(400 + Math.random() * 300, this.ctx.currentTime);
-    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.04);
-  },
-  playFanfare(success) {
-    if (!this.ctx) return;
-    const notes = success ? [392, 523, 659, 783] : [300, 260, 220, 180];
-    notes.forEach((freq, idx) => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.1);
-      gain.gain.setValueAtTime(0.12, this.ctx.currentTime + idx * 0.1);
-      gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.1 + 0.25);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(this.ctx.currentTime + idx * 0.1);
-      osc.stop(this.ctx.currentTime + idx * 0.1 + 0.25);
-    });
+
+    if (type === 'slash') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(350, t);
+      osc.frequency.exponentialRampToValueAtTime(80, t + 0.12);
+      gain.gain.setValueAtTime(0.1, t);
+      gain.gain.linearRampToValueAtTime(0.01, t + 0.12);
+      osc.start(t); osc.stop(t + 0.12);
+    } else if (type === 'blink') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(300, t);
+      osc.frequency.exponentialRampToValueAtTime(850, t + 0.15);
+      gain.gain.setValueAtTime(0.12, t);
+      gain.gain.linearRampToValueAtTime(0.01, t + 0.15);
+      osc.start(t); osc.stop(t + 0.15);
+    } else if (type === 'ult') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(150, t);
+      osc.frequency.linearRampToValueAtTime(60, t + 0.4);
+      gain.gain.setValueAtTime(0.25, t);
+      gain.gain.linearRampToValueAtTime(0.01, t + 0.4);
+      osc.start(t); osc.stop(t + 0.4);
+    } else if (type === 'hit') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(120, t);
+      gain.gain.setValueAtTime(0.15, t);
+      gain.gain.linearRampToValueAtTime(0.01, t + 0.08);
+      osc.start(t); osc.stop(t + 0.08);
+    }
   }
 };
-window.addEventListener('touchstart', () => AudioEngine.init(), { once: true });
-window.addEventListener('click', () => AudioEngine.init(), { once: true });
+window.addEventListener('touchstart', () => Sound.init(), { once: true });
+window.addEventListener('click', () => Sound.init(), { once: true });
 
-// --- ХОЛСТ И МИР ---
+// --- БАЗА ЗНАНИЙ СКИЛЛОВ (ДЛЯ ЗАМЕНЫ) ---
+const SKILL_DATABASE = {
+  slash_aoe: { id: "slash_aoe", name: "Вихрь", type: 1, cd: 3.5, cdTimer: 0, range: 75, dmg: 35 },
+  fireball:  { id: "fireball",  name: "Фаербол", type: 1, cd: 4.0, cdTimer: 0, range: 120, dmg: 55 },
+  blink:     { id: "blink",     name: "Блинк", type: 2, cd: 5.0, cdTimer: 0, dist: 130 },
+  sprint:    { id: "sprint",    name: "Ускорение", type: 2, cd: 6.0, cdTimer: 0, dist: 80 },
+  thunder:   { id: "thunder",   name: "Гром", type: 3, cd: 11.0, cdTimer: 0, range: 140, dmg: 90 },
+  meteor:    { id: "meteor",    name: "Метеор", type: 3, cd: 13.0, cdTimer: 0, range: 160, dmg: 120 }
+};
+
+// --- МИР И ХОЛСТ ---
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.addEventListener('resize', resize);
 resize();
 
-const WORLD = { width: 1800, height: 1300 };
+const WORLD = { width: 2200, height: 1600 };
 const camera = { x: 0, y: 0 };
+let currentQuest = "Осмотрите заставу на востоке";
+
+function setQuest(q) {
+  currentQuest = q;
+  document.getElementById('quest-hud').innerHTML = `Квест: <span>${q}</span>`;
+  saveProgress();
+}
 
 // ИГРОК
 const player = {
-  x: 280,
-  y: 340,
+  x: 400,
+  y: 500,
   r: 16,
   speed: 210,
   vx: 0,
   vy: 0,
+  faceAngle: 0,
+  hp: 100,
+  maxHp: 100,
+  gold: 0,
+  isInvulnerable: false,
   walkFrame: 0,
-  stats: { charisma: 2, strength: 1 },
-  inventory: [],
-  hasItem(name) { return this.inventory.includes(name); }
+  skills: {
+    s1: { ...SKILL_DATABASE.slash_aoe },
+    s2: { ...SKILL_DATABASE.blink },
+    s3: { ...SKILL_DATABASE.thunder }
+  }
 };
 
-// ВОРОТА В ЦИТАДЕЛЬ
-const gate = {
-  x: 750,
-  y: 220,
-  w: 30,
-  h: 160,
-  isOpen: false
-};
+// ДРОПНУТЫЕ СФЕРЫ СКИЛЛОВ (LOOT)
+const droppedSkills = [];
 
-// СУНДУК
-const chest = {
-  x: 220,
-  y: 720,
-  w: 32,
-  h: 24,
-  opened: false,
-  item: "Грамота Наместника"
-};
-
-// NPC 1: СТАРИК У ОЗЕРА
-const hermit = {
-  x: 520,
-  y: 730,
-  r: 16,
-  name: "Отшельник",
-  talkRadius: 70,
-  dialogDone: false
-};
-
-// NPC 2: СТРАЖНИК ВОРОТ
-const guard = {
-  x: 710,
-  y: 300,
-  r: 18,
-  name: "Капитан Заставы",
-  talkRadius: 80,
-  passed: false,
-  failed: false
-};
-
-// ПРЕПЯТСТВИЯ И ДЕКОРАЦИИ
-const obstacles = [
-  // Стены цитадели (разрезаны воротами)
-  { x: 740, y: 0, w: 40, h: 220, type: 'wall' },
-  { x: 740, y: 380, w: 40, h: 920, type: 'wall' },
-  // Озеро
-  { x: 380, y: 800, w: 260, h: 180, type: 'water' },
-  // Домик в деревне
-  { x: 140, y: 160, w: 120, h: 90, type: 'house' },
-  // Деревья
-  { x: 420, y: 220, r: 35, type: 'tree' },
-  { x: 180, y: 480, r: 40, type: 'tree' },
-  { x: 500, y: 480, r: 35, type: 'tree' },
-  { x: 300, y: 950, r: 42, type: 'tree' },
-  // Каменные башни в Цитадели
-  { x: 1050, y: 240, w: 140, h: 140, type: 'castle' },
-  { x: 1050, y: 550, w: 140, h: 140, type: 'castle' },
-  { x: 1350, y: 400, r: 50, type: 'tree' }
+// ВРАГИ (РАЗБОЙНИКИ И МОБЫ)
+const enemies = [
+  { id: 1, x: 550, y: 850, r: 16, hp: 60, maxHp: 60, speed: 110, dmg: 12, agro: false, name: "Разбойник" },
+  { id: 2, x: 750, y: 950, r: 16, hp: 60, maxHp: 60, speed: 110, dmg: 12, agro: false, name: "Головорез" },
+  { id: 3, x: 1200, y: 400, r: 20, hp: 130, maxHp: 130, speed: 90, dmg: 22, agro: false, name: "Орк-Громила" }
 ];
 
-// --- ДЖОЙСТИК ---
-const base = document.getElementById('joystick-base');
-const stick = document.getElementById('joystick-stick');
-let touchId = null;
-let baseCenter = { x: 0, y: 0 };
-const maxDist = 42;
+// NPC
+const npcs = [
+  { id: 'guard', x: 920, y: 480, r: 18, name: "Капитан Заставы", isHostile: false, hp: 160, maxHp: 160, speed: 120, dmg: 25 },
+  { id: 'hermit', x: 420, y: 1100, r: 16, name: "Шаман Озера", isHostile: false, hp: 90, maxHp: 90, speed: 100, dmg: 15 },
+  { id: 'merchant', x: 300, y: 400, r: 17, name: "Торговец Зельями", isHostile: false }
+];
 
-base.addEventListener('touchstart', (e) => {
+// ВИЗУАЛЬНЫЕ ЭФФЕКТЫ (FX)
+const effects = [];
+function addSlashFX(x, y, radius, color = '#f59e0b') {
+  effects.push({ type: 'slash', x, y, r: radius, color, life: 0.18, maxLife: 0.18 });
+}
+function addExplosionFX(x, y, radius) {
+  effects.push({ type: 'explosion', x, y, r: radius, life: 0.35, maxLife: 0.35 });
+}
+
+// --- ВИРТУАЛЬНЫЙ ДЖОЙСТИК ---
+const joyBase = document.getElementById('joystick-base');
+const joyStick = document.getElementById('joystick-stick');
+let joyTouchId = null;
+let joyCenter = { x: 0, y: 0 };
+const maxJoyDist = 42;
+
+joyBase.addEventListener('touchstart', e => {
   e.preventDefault();
   const t = e.changedTouches[0];
-  touchId = t.identifier;
-  const rect = base.getBoundingClientRect();
-  baseCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-  updateStick(t.clientX, t.clientY);
-  triggerHaptic('selection');
+  joyTouchId = t.identifier;
+  const rect = joyBase.getBoundingClientRect();
+  joyCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  handleJoyMove(t.clientX, t.clientY);
 }, { passive: false });
 
-window.addEventListener('touchmove', (e) => {
-  if (touchId === null) return;
+window.addEventListener('touchmove', e => {
+  if (joyTouchId === null) return;
   for (let i = 0; i < e.changedTouches.length; i++) {
-    const t = e.changedTouches[i];
-    if (t.identifier === touchId) {
-      updateStick(t.clientX, t.clientY);
+    if (e.changedTouches[i].identifier === joyTouchId) {
+      handleJoyMove(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
       break;
     }
   }
 }, { passive: false });
 
-function resetStick() {
-  touchId = null;
-  stick.style.transform = `translate3d(0, 0, 0)`;
+function resetJoystick() {
+  joyTouchId = null;
+  joyStick.style.transform = `translate3d(0, 0, 0)`;
   player.vx = 0;
   player.vy = 0;
 }
-window.addEventListener('touchend', resetStick);
-window.addEventListener('touchcancel', resetStick);
+window.addEventListener('touchend', resetJoystick);
+window.addEventListener('touchcancel', resetJoystick);
 
-function updateStick(cx, cy) {
-  const dx = cx - baseCenter.x;
-  const dy = cy - baseCenter.y;
+function handleJoyMove(cx, cy) {
+  const dx = cx - joyCenter.x;
+  const dy = cy - joyCenter.y;
   const dist = Math.hypot(dx, dy);
-  const clamped = Math.min(dist, maxDist);
+  const clamped = Math.min(dist, maxJoyDist);
   const angle = Math.atan2(dy, dx);
 
-  const nx = Math.cos(angle) * clamped;
-  const ny = Math.sin(angle) * clamped;
-
-  stick.style.transform = `translate3d(${nx}px, ${ny}px, 0)`;
-  player.vx = nx / maxDist;
-  player.vy = ny / maxDist;
+  joyStick.style.transform = `translate3d(${Math.cos(angle)*clamped}px, ${Math.sin(angle)*clamped}px, 0)`;
+  player.vx = Math.cos(angle) * (clamped / maxJoyDist);
+  player.vy = Math.sin(angle) * (clamped / maxJoyDist);
+  player.faceAngle = angle;
 }
 
-// Управление клавиатурой ПК (для тестов в браузере)
-const keys = {};
-window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+// --- КНОПКИ БОЯ И СКИЛЛОВ В СТИЛЕ MLBB ---
+function updateSkillLabels() {
+  document.getElementById('s1-label').innerText = player.skills.s1.name;
+  document.getElementById('s2-label').innerText = player.skills.s2.name;
+  document.getElementById('s3-label').innerText = player.skills.s3.name;
+}
+updateSkillLabels();
 
-// --- ИНТЕРФЕЙС, ДИАЛОГИ И КУБИК ---
+function updateGoldUI() {
+  document.getElementById('gold-val').innerText = player.gold;
+}
+
+// Базовая атака
+document.getElementById('btn-attack').addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  triggerHaptic('impact', 'medium');
+  Sound.play('slash');
+  addSlashFX(player.x + Math.cos(player.faceAngle)*30, player.y + Math.sin(player.faceAngle)*30, 45, '#e11d48');
+  dealAoEDamage(player.x, player.y, 65, 20);
+});
+
+// Скилл 1: Урон
+document.getElementById('btn-skill-1').addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const s = player.skills.s1;
+  if (s.cdTimer > 0) return;
+  s.cdTimer = s.cd;
+  triggerHaptic('impact', 'heavy');
+  Sound.play('slash');
+  addSlashFX(player.x, player.y, s.range, '#f59e0b');
+  dealAoEDamage(player.x, player.y, s.range, s.dmg);
+});
+
+// Скилл 2: Блинк / Рывок
+document.getElementById('btn-skill-2').addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const s = player.skills.s2;
+  if (s.cdTimer > 0) return;
+  s.cdTimer = s.cd;
+  triggerHaptic('impact', 'medium');
+  Sound.play('blink');
+
+  // Создаем след блинка
+  effects.push({ type: 'ghost', x: player.x, y: player.y, life: 0.25, maxLife: 0.25 });
+  player.x += Math.cos(player.faceAngle) * s.dist;
+  player.y += Math.sin(player.faceAngle) * s.dist;
+  player.isInvulnerable = true;
+  setTimeout(() => player.isInvulnerable = false, 300);
+});
+
+// Скилл 3: Ультимейт
+document.getElementById('btn-skill-3').addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const s = player.skills.s3;
+  if (s.cdTimer > 0) return;
+  s.cdTimer = s.cd;
+  triggerHaptic('notification', 'warning');
+  Sound.play('ult');
+  addExplosionFX(player.x, player.y, s.range);
+  dealAoEDamage(player.x, player.y, s.range, s.dmg);
+});
+
+// Нанесение урона мобам и агрессивным NPC
+function dealAoEDamage(cx, cy, range, dmg) {
+  // Враги
+  enemies.forEach(e => {
+    if (Math.hypot(e.x - cx, e.y - cy) <= range + e.r) {
+      e.hp -= dmg;
+      e.agro = true;
+      Sound.play('hit');
+      triggerHaptic('impact', 'light');
+      if (e.hp <= 0) killEnemy(e);
+    }
+  });
+
+  // Враждебные NPC
+  npcs.forEach(n => {
+    if (n.isHostile && Math.hypot(n.x - cx, n.y - cy) <= range + n.r) {
+      n.hp -= dmg;
+      Sound.play('hit');
+      if (n.hp <= 0) {
+        n.isDead = true;
+        player.gold += 35;
+        updateGoldUI();
+        dropSkill(n.x, n.y, SKILL_DATABASE.meteor);
+      }
+    }
+  });
+}
+
+function killEnemy(e) {
+  const idx = enemies.indexOf(e);
+  if (idx !== -1) {
+    enemies.splice(idx, 1);
+    player.gold += 15;
+    updateGoldUI();
+    saveProgress();
+    triggerHaptic('notification', 'success');
+
+    // Шанс дропа сменяемого скилла
+    if (Math.random() < 0.6) {
+      const dropPool = [SKILL_DATABASE.fireball, SKILL_DATABASE.meteor, SKILL_DATABASE.sprint];
+      const randomSkill = dropPool[Math.floor(Math.random() * dropPool.length)];
+      dropSkill(e.x, e.y, randomSkill);
+    }
+  }
+}
+
+function dropSkill(x, y, skillData) {
+  droppedSkills.push({ x, y, skill: skillData, r: 14 });
+}
+
+// --- ДИАЛОГИ, ТОРГОВЕЦ И КУБИК С АГРОМ ---
 const actionBtn = document.getElementById('action-btn');
 const dialogModal = document.getElementById('dialog-modal');
 const dialogName = document.getElementById('dialog-name');
@@ -436,405 +634,339 @@ const dialogOptions = document.getElementById('dialog-options');
 const diceModal = document.getElementById('dice-modal');
 const diceVal = document.getElementById('dice-val');
 const diceStatus = document.getElementById('dice-status');
-const invHud = document.getElementById('inv-hud');
 
-let activeInteractTarget = null; // 'guard', 'hermit', 'chest'
+let currentInteract = null;
 
 actionBtn.addEventListener('click', () => {
-  triggerHaptic('impact', 'medium');
-  if (activeInteractTarget === 'chest') openChest();
-  else if (activeInteractTarget === 'hermit') openHermitDialog();
-  else if (activeInteractTarget === 'guard') openGuardDialog();
+  triggerHaptic('selection');
+  if (currentInteract?.type === 'skill') {
+    swapSkill(currentInteract.data);
+  } else if (currentInteract?.type === 'npc') {
+    interactWithNPC(currentInteract.data);
+  }
 });
 
-function updateInventoryUI() {
-  invHud.innerHTML = `Сумка: <span>${player.inventory.length ? player.inventory.join(', ') : 'Пусто'}</span>`;
-}
+function swapSkill(dropObj) {
+  const newS = dropObj.skill;
+  if (newS.type === 1) player.skills.s1 = { ...newS };
+  else if (newS.type === 2) player.skills.s2 = { ...newS };
+  else if (newS.type === 3) player.skills.s3 = { ...newS };
 
-function openChest() {
-  if (chest.opened) return;
-  chest.opened = true;
-  player.inventory.push(chest.item);
-  updateInventoryUI();
+  const idx = droppedSkills.indexOf(dropObj);
+  if (idx !== -1) droppedSkills.splice(idx, 1);
+  updateSkillLabels();
+  saveProgress();
   triggerHaptic('notification', 'success');
-  AudioEngine.playFanfare(true);
-
-  dialogName.innerText = "Старый тайник";
-  dialogText.innerText = `Вы открыли заросший сундук и нашли запечатанный королевский свиток: «${chest.item}»! Это поможет пройти через пост капитана без лишних вопросов.`;
-  dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Забрать и закрыть]</button>`;
-  dialogModal.style.display = 'block';
   actionBtn.style.display = 'none';
 }
 
-function openHermitDialog() {
-  dialogName.innerText = hermit.name;
-  actionBtn.style.display = 'none';
+function interactWithNPC(n) {
+  dialogName.innerText = n.name;
   dialogModal.style.display = 'block';
 
-  if (!hermit.dialogDone) {
-    dialogText.innerText = "«Приветствую тебя. В цитадель за стеной просто так не пройти — капитан неподкупен. Но на западе в кустах спрятан тайник со старой грамотой. Возьми её, либо попробуй убедить его силой слова!»";
+  if (n.id === 'merchant') {
+    dialogText.innerText = "«Привет, путник! Могу залечить твои раны эликсиром жизни за 20 золотых.»";
     dialogOptions.innerHTML = `
-      <button class="choice-btn" onclick="receiveHermitBlessing()">«Спасибо за совет, мудрец» [Получить благословение +1 ХАР]</button>
+      <button class="choice-btn" onclick="buyHeal()">Купить Зелье Исцеления (20 золота)</button>
       <button class="choice-btn" onclick="closeDialog()">[Уйти]</button>
     `;
-  } else {
-    dialogText.innerText = "«Пусть духи хранят тебя. Иди к воротам на восток.»";
-    dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Кивнуть и уйти]</button>`;
+  } else if (n.id === 'guard') {
+    dialogText.innerText = "«Я охраняю восточный рубеж. Докажи, что ты достоин пройти, либо проваливай!»";
+    dialogOptions.innerHTML = `
+      <button class="choice-btn" onclick="rollDiceWithAggro(n, 12, 'convince')">
+        🎲 [Убеждение: Сл. 12] «Я истребляю разбойников в округе»
+      </button>
+      <button class="choice-btn" onclick="rollDiceWithAggro(n, 15, 'threat')">
+        🎲 [Запугивание: Сл. 15] «Уйди сам, иначе выбью ворота»
+      </button>
+      <button class="choice-btn" onclick="closeDialog()">[Отойти]</button>
+    `;
+  } else if (n.id === 'hermit') {
+    dialogText.innerText = "«Озеро хранит древние тайны. Не испытывай моё терпение дурными намерениями...»";
+    dialogOptions.innerHTML = `
+      <button class="choice-btn" onclick="rollDiceWithAggro(n, 11, 'ask')">
+        🎲 [Дипломатия: Сл. 11] «Научи меня тайной магии»
+      </button>
+      <button class="choice-btn" onclick="closeDialog()">[Отойти]</button>
+    `;
   }
 }
 
-function receiveHermitBlessing() {
-  hermit.dialogDone = true;
-  player.stats.charisma += 1;
-  document.getElementById('stats-hud').innerHTML = `ХАР: <span>+${player.stats.charisma}</span> | СИЛ: <span>+${player.stats.strength}</span>`;
-  triggerHaptic('notification', 'success');
-  closeDialog();
+function buyHeal() {
+  if (player.gold >= 20 && player.hp < player.maxHp) {
+    player.gold -= 20;
+    player.hp = Math.min(player.maxHp, player.hp + 50);
+    updateGoldUI();
+    updateHpUI();
+    triggerHaptic('notification', 'success');
+    closeDialog();
+  }
 }
 
-function openGuardDialog() {
-  dialogName.innerText = guard.name;
-  actionBtn.style.display = 'none';
-  dialogModal.style.display = 'block';
+// Бросок кубика D20 с механикой ярости (Aggro при малом значении)
+function rollDiceWithAggro(targetNpc, difficulty, type) {
+  dialogModal.style.display = 'none';
+  diceModal.style.display = 'block';
+  diceStatus.innerText = `Проверка сложности: ${difficulty}`;
 
-  if (guard.passed) {
-    dialogText.innerText = "«Ворота открыты. Добро пожаловать во внутреннюю Цитадель!»";
-    dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Войти]</button>`;
-    return;
-  }
-  if (guard.failed) {
-    dialogText.innerText = "«Я тебя предупреждал! Прочь от заставы, пока я не заковал тебя в кандалы!»";
-    dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Отойти]</button>`;
-    return;
-  }
+  let ticks = 0;
+  const interval = setInterval(() => {
+    diceVal.innerText = Math.floor(Math.random() * 20) + 1;
+    triggerHaptic('impact', 'light');
+    ticks++;
+    if (ticks > 12) {
+      clearInterval(interval);
+      const roll = Math.floor(Math.random() * 20) + 1;
+      diceVal.innerText = roll;
 
-  dialogText.innerText = "«Стой! Проход за стену цитадели закрыт. Вход только по спецдопуску или по делу государственной важности.»";
-  let options = "";
+      if (roll >= difficulty) {
+        // Успех
+        diceStatus.innerText = "УСПЕХ!";
+        diceStatus.style.color = "#4ade80";
+        triggerHaptic('notification', 'success');
+        setTimeout(() => {
+          diceModal.style.display = 'none';
+          dialogModal.style.display = 'block';
+          dialogText.innerText = "«Впечатляет! Твоя взяла, вот награда за сговорчивость.»";
+          player.gold += 30;
+          updateGoldUI();
+          setQuest("Проход свободен! Исследуйте глубины карты");
+          dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Забрать]</button>`;
+        }, 1200);
+      } else if (roll <= 6) {
+        // КРИТИЧЕСКИЙ ПРОВАЛ -> НАПАДЕНИЕ NPC
+        diceStatus.innerText = "КРИТ. ПРОВАЛ! ОППОНЕНТ В ЯРОСТИ!";
+        diceStatus.style.color = "#ef4444";
+        triggerHaptic('notification', 'error');
 
-  if (player.hasItem("Грамота Наместника")) {
-    options += `<button class="choice-btn" style="border-color:#f59e0b;" onclick="useItemPass()">📜 [Показать Грамоту] «У меня есть официальный допуск Наместника»</button>`;
-  }
-  options += `
-    <button class="choice-btn" onclick="rollD20('charisma', 13)">
-      🎲 [Харизма: Сложность 13] «Я посол соседних земель со срочным донесением» (+${player.stats.charisma})
-    </button>
-    <button class="choice-btn" onclick="rollD20('strength', 15)">
-      🎲 [Запугивание: Сложность 15] «Отойди с прохода, если тебе дорога служба» (+${player.stats.strength})
-    </button>
-    <button class="choice-btn" onclick="closeDialog()">[Отойти]</button>
-  `;
-  dialogOptions.innerHTML = options;
-}
-
-function useItemPass() {
-  guard.passed = true;
-  gate.isOpen = true;
-  triggerHaptic('notification', 'success');
-  AudioEngine.playFanfare(true);
-  dialogText.innerText = "«Печать подлинная... Прошу прощения за задержку. Открыть ворота цитадели!»";
-  dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Пройти через ворота]</button>`;
+        setTimeout(() => {
+          diceModal.style.display = 'none';
+          // Превращаем NPC во врага
+          targetNpc.isHostile = true;
+          setQuest(`Побеждать разъяренного: ${targetNpc.name}!`);
+        }, 1500);
+      } else {
+        // Обычный провал
+        diceStatus.innerText = "ПРОВАЛ!";
+        diceStatus.style.color = "#f87171";
+        triggerHaptic('notification', 'warning');
+        setTimeout(() => {
+          diceModal.style.display = 'none';
+          dialogModal.style.display = 'block';
+          dialogText.innerText = "«Твои слова пусты. Разговор окончен!»";
+          dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Завершить]</button>`;
+        }, 1200);
+      }
+    }
+  }, 60);
 }
 
 function closeDialog() {
   dialogModal.style.display = 'none';
-  triggerHaptic('selection');
+  actionBtn.style.display = 'none';
 }
 
-// МЕХАНИКА КУБИКА D20
-function rollD20(statType, diff) {
-  dialogModal.style.display = 'none';
-  diceModal.style.display = 'block';
-  diceStatus.innerText = `Проверка сложности: ${diff}`;
-  diceStatus.style.color = "#ffffff";
-
-  let ticks = 0;
-  const timer = setInterval(() => {
-    diceVal.innerText = Math.floor(Math.random() * 20) + 1;
-    AudioEngine.playDiceClick();
-    triggerHaptic('impact', 'light');
-    ticks++;
-
-    if (ticks > 14) {
-      clearInterval(timer);
-      const roll = Math.floor(Math.random() * 20) + 1;
-      const bonus = player.stats[statType] || 0;
-      const total = roll + bonus;
-      const success = total >= diff;
-
-      diceVal.innerText = total;
-      diceStatus.innerText = success ? `УСПЕХ! (${roll} + ${bonus} бонус)` : `ПРОВАЛ (${roll} + ${bonus} бонус)`;
-      diceStatus.style.color = success ? "#4ade80" : "#f87171";
-
-      triggerHaptic('notification', success ? 'success' : 'error');
-      AudioEngine.playFanfare(success);
-
-      setTimeout(() => {
-        diceModal.style.display = 'none';
-        dialogModal.style.display = 'block';
-        if (success) {
-          guard.passed = true;
-          gate.isOpen = true;
-          dialogText.innerText = "«Твои доводы звучат убедительно... Ладно, ворота открыты, проходи!»";
-        } else {
-          guard.failed = true;
-          dialogText.innerText = "«Жалкая ложь! Ты никуда не пройдешь. Убирайся вон!»";
-        }
-        dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Завершить]</button>`;
-      }, 1500);
-    }
-  }, 65);
+function updateHpUI() {
+  const pct = Math.max(0, (player.hp / player.maxHp) * 100);
+  document.getElementById('hp-bar-fill').style.width = `${pct}%`;
 }
 
-// --- ПРОВЕРКА ВЗАИМОДЕЙСТВИЙ ---
-function checkInteractions() {
-  const dGuard = Math.hypot(player.x - guard.x, player.y - guard.y);
-  const dHermit = Math.hypot(player.x - hermit.x, player.y - hermit.y);
-  const dChest = Math.hypot(player.x - (chest.x + 16), player.y - (chest.y + 12));
-
-  if (dGuard <= guard.talkRadius) {
-    activeInteractTarget = 'guard';
-    actionBtn.innerText = "СТРАЖ";
-    actionBtn.style.display = dialogModal.style.display === 'block' ? 'none' : 'block';
-  } else if (dHermit <= hermit.talkRadius) {
-    activeInteractTarget = 'hermit';
-    actionBtn.innerText = "ГОВОРИТЬ";
-    actionBtn.style.display = dialogModal.style.display === 'block' ? 'none' : 'block';
-  } else if (!chest.opened && dChest <= 55) {
-    activeInteractTarget = 'chest';
-    actionBtn.innerText = "СУНДУК";
-    actionBtn.style.display = dialogModal.style.display === 'block' ? 'none' : 'block';
-  } else {
-    activeInteractTarget = null;
-    actionBtn.style.display = 'none';
-  }
-}
-
-// --- ФИЗИКА И ОБНОВЛЕНИЕ ---
-let stepTimer = 0;
+// --- ИГРОВОЙ ЦИКЛ, ФИЗИКА И AI МОБОВ ---
 let lastTime = performance.now();
 
 function update(dt) {
-  if (dialogModal.style.display === 'block' || diceModal.style.display === 'block') {
-    return;
-  }
+  // Кулдауны скиллов
+  ['s1', 's2', 's3'].forEach((sKey, i) => {
+    const s = player.skills[sKey];
+    if (s.cdTimer > 0) {
+      s.cdTimer = Math.max(0, s.cdTimer - dt);
+      const mask = document.getElementById(`${sKey}-cd`);
+      mask.style.display = s.cdTimer > 0 ? 'flex' : 'none';
+      mask.innerText = Math.ceil(s.cdTimer);
+    }
+  });
 
-  // Поддержка клавиш ПК
-  let kx = 0, ky = 0;
-  if (keys['w'] || keys['arrowup']) ky -= 1;
-  if (keys['s'] || keys['arrowdown']) ky += 1;
-  if (keys['a'] || keys['arrowleft']) kx -= 1;
-  if (keys['d'] || keys['arrowright']) kx += 1;
-
-  if (kx !== 0 || ky !== 0) {
-    const l = Math.hypot(kx, ky);
-    player.vx = kx / l;
-    player.vy = ky / l;
-  } else if (!touchId) {
-    player.vx = 0;
-    player.vy = 0;
-  }
-
-  // Звук шагов и покачивание
+  // Перемещение героя
   if (player.vx !== 0 || player.vy !== 0) {
+    player.x += player.vx * player.speed * dt;
+    player.y += player.vy * player.speed * dt;
     player.walkFrame += dt * 10;
-    stepTimer += dt;
-    if (stepTimer > 0.32) {
-      AudioEngine.playStep();
-      stepTimer = 0;
-    }
   }
+  player.x = Math.max(30, Math.min(WORLD.width - 30, player.x));
+  player.y = Math.max(30, Math.min(WORLD.height - 30, player.y));
 
-  let nx = player.x + player.vx * player.speed * dt;
-  let ny = player.y + player.vy * player.speed * dt;
+  // AI Врагов (преследование и атака)
+  enemies.forEach(e => {
+    const d = Math.hypot(player.x - e.x, player.y - e.y);
+    if (d < 220) e.agro = true;
+    if (e.agro && d > 32) {
+      const ang = Math.atan2(player.y - e.y, player.x - e.x);
+      e.x += Math.cos(ang) * e.speed * dt;
+      e.y += Math.sin(ang) * e.speed * dt;
 
-  // Коллизия со стенами мира
-  nx = Math.max(player.r, Math.min(WORLD.width - player.r, nx));
-  ny = Math.max(player.r, Math.min(WORLD.height - player.r, ny));
-
-  // Коллизия с закрытыми воротами
-  if (!gate.isOpen) {
-    if (nx + player.r > gate.x && nx - player.r < gate.x + gate.w &&
-        ny + player.r > gate.y && ny - player.r < gate.y + gate.h) {
-      nx = player.x;
-      ny = player.y;
-    }
-  }
-
-  // Коллизия со статичными препятствиями
-  obstacles.forEach(o => {
-    if (o.r) {
-      const d = Math.hypot(nx - o.x, ny - o.y);
-      if (d < player.r + o.r) {
-        const ang = Math.atan2(ny - o.y, nx - o.x);
-        nx = o.x + Math.cos(ang) * (player.r + o.r);
-        ny = o.y + Math.sin(ang) * (player.r + o.r);
-      }
-    } else {
-      if (nx + player.r > o.x && nx - player.r < o.x + o.w &&
-          ny + player.r > o.y && ny - player.r < o.y + o.h) {
-        nx = player.x;
-        ny = player.y;
+      // Удар по игроку
+      if (d < 38 && !player.isInvulnerable) {
+        player.hp -= e.dmg * dt;
+        updateHpUI();
+        if (player.hp <= 0) respawnPlayer();
       }
     }
   });
 
-  player.x = nx;
-  player.y = ny;
+  // AI Враждебных NPC
+  npcs.forEach(n => {
+    if (n.isHostile && !n.isDead) {
+      const d = Math.hypot(player.x - n.x, player.y - n.y);
+      if (d > 30) {
+        const ang = Math.atan2(player.y - n.y, player.x - n.x);
+        n.x += Math.cos(ang) * n.speed * dt;
+        n.y += Math.sin(ang) * n.speed * dt;
+      }
+      if (d < 40 && !player.isInvulnerable) {
+        player.hp -= n.dmg * dt;
+        updateHpUI();
+        if (player.hp <= 0) respawnPlayer();
+      }
+    }
+  });
 
-  // Плавная камера
+  // Обновление эффектов
+  for (let i = effects.length - 1; i >= 0; i--) {
+    effects[i].life -= dt;
+    if (effects[i].life <= 0) effects.splice(i, 1);
+  }
+
+  // Камера за игроком
   camera.x = Math.max(0, Math.min(WORLD.width - canvas.width, player.x - canvas.width / 2));
   camera.y = Math.max(0, Math.min(WORLD.height - canvas.height, player.y - canvas.height / 2));
 
   checkInteractions();
 }
 
-// --- ПРОЦЕДУРНАЯ ПИКСЕЛЬНАЯ ОТРИСОВКА ---
-
-function drawPixelCharacter(ctx, x, y, bodyColor, headColor, isMoving, walkFrame) {
-  ctx.save();
-  ctx.translate(x, y);
-
-  // Тень
-  ctx.fillStyle = "rgba(0,0,0,0.3)";
-  ctx.beginPath();
-  ctx.ellipse(0, 16, 12, 5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Ноги с анимацией ходьбы
-  const legOffset = isMoving ? Math.sin(walkFrame) * 4 : 0;
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(-8, 6 - legOffset, 6, 10 + legOffset);
-  ctx.fillRect(2, 6 + legOffset, 6, 10 - legOffset);
-
-  // Тело / туловище
-  ctx.fillStyle = bodyColor;
-  ctx.fillRect(-10, -8, 20, 15);
-  // Пояс
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(-10, 2, 20, 3);
-
-  // Голова
-  ctx.fillStyle = headColor;
-  ctx.fillRect(-8, -22, 16, 14);
-
-  // Глаза
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(-4, -16, 3, 3);
-  ctx.fillRect(2, -16, 3, 3);
-
-  ctx.restore();
+function respawnPlayer() {
+  player.hp = player.maxHp;
+  player.x = 400;
+  player.y = 500;
+  updateHpUI();
+  triggerHaptic('notification', 'error');
 }
 
-function drawProceduralChest(ctx, c) {
-  ctx.save();
-  ctx.fillStyle = "#78350f";
-  ctx.fillRect(c.x, c.y, c.w, c.h);
-  ctx.fillStyle = "#f59e0b";
-  ctx.fillRect(c.x, c.y + 8, c.w, 4); // Золотой обод
-  ctx.fillRect(c.x + 13, c.y + 6, 6, 7); // Замок
-  if (!c.opened) {
-    ctx.strokeStyle = "#fbbf24";
-    ctx.strokeRect(c.x, c.y, c.w, c.h);
+// Проверка интерактивности вокруг игрока
+function checkInteractions() {
+  if (dialogModal.style.display === 'block' || diceModal.style.display === 'block') {
+    actionBtn.style.display = 'none';
+    return;
   }
-  ctx.restore();
+
+  // Проверка лута скиллов
+  for (let s of droppedSkills) {
+    if (Math.hypot(player.x - s.x, player.y - s.y) < 40) {
+      currentInteract = { type: 'skill', data: s };
+      actionBtn.innerText = `ВЗЯТЬ: ${s.skill.name}`;
+      actionBtn.style.display = 'block';
+      return;
+    }
+  }
+
+  // Проверка мирных NPC
+  for (let n of npcs) {
+    if (!n.isHostile && !n.isDead && Math.hypot(player.x - n.x, player.y - n.y) < 65) {
+      currentInteract = { type: 'npc', data: n };
+      actionBtn.innerText = "ГОВОРИТЬ";
+      actionBtn.style.display = 'block';
+      return;
+    }
+  }
+
+  actionBtn.style.display = 'none';
+  currentInteract = null;
 }
 
+// --- ОТРИСОВКА МИРА И ГРАФИКИ ---
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.save();
   ctx.translate(-camera.x, -camera.y);
 
-  // Зона 1: Трава (запад)
-  ctx.fillStyle = "#2d5a27";
-  ctx.fillRect(0, 0, 750, WORLD.height);
-
-  // Зона 2: Каменная площадь цитадели (восток)
-  ctx.fillStyle = "#475569";
-  ctx.fillRect(750, 0, WORLD.width - 750, WORLD.height);
-
-  // Плитка на площади цитадели
-  ctx.strokeStyle = "rgba(255,255,255,0.06)";
-  ctx.lineWidth = 2;
-  for (let x = 750; x < WORLD.width; x += 60) {
+  // Сетка травы
+  ctx.fillStyle = "#1e391e";
+  ctx.fillRect(0, 0, WORLD.width, WORLD.height);
+  ctx.strokeStyle = "rgba(255,255,255,0.04)";
+  ctx.lineWidth = 1;
+  for (let x = 0; x < WORLD.width; x += 100) {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, WORLD.height); ctx.stroke();
   }
-  for (let y = 0; y < WORLD.height; y += 60) {
-    ctx.beginPath(); ctx.moveTo(750, y); ctx.lineTo(WORLD.width, y); ctx.stroke();
+  for (let y = 0; y < WORLD.height; y += 100) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WORLD.width, y); ctx.stroke();
   }
 
-  // Препятствия
-  obstacles.forEach(o => {
-    if (o.type === 'water') {
-      ctx.fillStyle = "#0284c7";
-      ctx.beginPath();
-      ctx.roundRect(o.x, o.y, o.w, o.h, 40);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,0.3)";
-      ctx.stroke();
-    } else if (o.type === 'wall') {
-      ctx.fillStyle = "#334155";
-      ctx.fillRect(o.x, o.y, o.w, o.h);
-      ctx.fillStyle = "#1e293b";
-      ctx.fillRect(o.x + 4, o.y, o.w - 8, o.h);
-    } else if (o.type === 'house') {
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(o.x, o.y, o.w, o.h);
-      ctx.fillStyle = "#991b1b"; // крыша
-      ctx.beginPath();
-      ctx.moveTo(o.x - 10, o.y);
-      ctx.lineTo(o.x + o.w / 2, o.y - 35);
-      ctx.lineTo(o.x + o.w + 10, o.y);
-      ctx.fill();
-    } else if (o.type === 'tree') {
-      ctx.fillStyle = "#166534";
-      ctx.beginPath();
-      ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#14532d";
-      ctx.beginPath();
-      ctx.arc(o.x - 5, o.y - 5, o.r * 0.7, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (o.type === 'castle') {
-      ctx.fillStyle = "#1e293b";
-      ctx.fillRect(o.x, o.y, o.w, o.h);
-      ctx.fillStyle = "#f59e0b";
-      ctx.fillRect(o.x + 20, o.y + 30, 20, 30); // Окно башни
-    }
+  // Дропнутые сферы скиллов
+  droppedSkills.forEach(s => {
+    ctx.fillStyle = "#38bdf8";
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#fff"; ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "center"; ctx.fillText(s.skill.name, s.x, s.y - 18);
   });
 
-  // Ворота
-  if (!gate.isOpen) {
-    ctx.fillStyle = "#b45309";
-    ctx.fillRect(gate.x, gate.y, gate.w, gate.h);
-    ctx.fillStyle = "#451a03";
-    ctx.fillRect(gate.x + 8, gate.y, 4, gate.h);
-    ctx.fillRect(gate.x + 18, gate.y, 4, gate.h);
-  } else {
-    ctx.fillStyle = "rgba(180, 83, 9, 0.4)";
-    ctx.fillRect(gate.x, gate.y, 10, gate.h); // Распахнутая створка
-  }
+  // Эффекты атак и ульты
+  effects.forEach(fx => {
+    ctx.save();
+    if (fx.type === 'slash') {
+      ctx.strokeStyle = fx.color;
+      ctx.lineWidth = 6 * (fx.life / fx.maxLife);
+      ctx.beginPath();
+      ctx.arc(fx.x, fx.y, fx.r, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (fx.type === 'explosion') {
+      ctx.fillStyle = `rgba(168, 85, 247, ${fx.life / fx.maxLife * 0.5})`;
+      ctx.beginPath();
+      ctx.arc(fx.x, fx.y, fx.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  });
 
-  // Сундук
-  drawProceduralChest(ctx, chest);
+  // Отрисовка Врагов
+  enemies.forEach(e => {
+    ctx.fillStyle = "#dc2626";
+    ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke();
+    // HP бар
+    ctx.fillStyle = "#000"; ctx.fillRect(e.x - 18, e.y - 25, 36, 5);
+    ctx.fillStyle = "#ef4444"; ctx.fillRect(e.x - 18, e.y - 25, 36 * (e.hp / e.maxHp), 5);
+  });
 
-  // Отрисовка NPC: Отшельник у озера
-  drawPixelCharacter(ctx, hermit.x, hermit.y, "#0284c7", "#fde047", false, 0);
-  ctx.fillStyle = "#fff";
-  ctx.font = "bold 11px sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText(hermit.name, hermit.x, hermit.y - 28);
-
-  // Отрисовка NPC: Стражник ворот
-  drawPixelCharacter(ctx, guard.x, guard.y, "#dc2626", "#e2e8f0", false, 0);
-  ctx.fillText(guard.name, guard.x, guard.y - 28);
+  // Отрисовка NPC
+  npcs.forEach(n => {
+    if (n.isDead) return;
+    ctx.fillStyle = n.isHostile ? "#b91c1c" : (n.id === 'merchant' ? "#10b981" : "#eab308");
+    ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.font = "bold 11px sans-serif";
+    ctx.textAlign = "center"; ctx.fillText(n.name, n.x, n.y - 24);
+  });
 
   // Отрисовка Игрока
-  const isMoving = player.vx !== 0 || player.vy !== 0;
-  drawPixelCharacter(ctx, player.x, player.y, "#2563eb", "#fed7aa", isMoving, player.walkFrame);
+  ctx.save();
+  ctx.translate(player.x, player.y);
+  // Направление взгляда (указатель)
+  ctx.strokeStyle = "#facc15";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(Math.cos(player.faceAngle) * 26, Math.sin(player.faceAngle) * 26);
+  ctx.stroke();
+
+  // Тело
+  ctx.fillStyle = "#2563eb";
+  ctx.beginPath(); ctx.arc(0, 0, player.r, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.restore();
 
   ctx.restore();
 }
 
-// ОСНОВНОЙ ЦИКЛ
+// Главный цикл
 function loop(now) {
   const dt = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
@@ -842,6 +974,8 @@ function loop(now) {
   render();
   requestAnimationFrame(loop);
 }
+
+loadProgress();
 requestAnimationFrame(loop);
 </script>
 </body>

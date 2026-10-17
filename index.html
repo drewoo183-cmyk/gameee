@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Telegram RPG Mini App</title>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #12151a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #1e3a1e;
+      image-rendering: pixelated;
+    }
+
+    /* Верхняя панель статов и инвентаря */
+    #top-bar {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .hud-badge {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 8px 12px;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .hud-badge span { color: #facc15; }
+
+    /* Джойстик */
+    #joystick-base {
+      position: absolute;
+      bottom: 35px;
+      left: 25px;
+      width: 120px;
+      height: 120px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-radius: 50%;
+      touch-action: none;
+      z-index: 10;
+    }
+    #joystick-stick {
+      position: absolute;
+      top: 35px;
+      left: 35px;
+      width: 50px;
+      height: 50px;
+      background: radial-gradient(circle, #f8fafc, #94a3b8);
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      pointer-events: none;
+      transform: translate3d(0, 0, 0);
+    }
+
+    /* Кнопка действия */
+    #action-btn {
+      display: none;
+      position: absolute;
+      bottom: 45px;
+      right: 25px;
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border: 3px solid #fff;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+      z-index: 10;
+      touch-action: manipulation;
+    }
+    #action-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* Диалоговое окно */
+    #dialog-modal {
+      display: none;
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 24px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 2px solid #eab308;
+      border-radius: 16px;
+      padding: 18px;
+      color: #f3f4f6;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.8);
+      z-index: 20;
+    }
+    #dialog-name {
+      color: #facc15;
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    #dialog-text {
+      font-size: 14px;
+      line-height: 1.45;
+      margin-bottom: 14px;
+      color: #cbd5e1;
+    }
+    .choice-btn {
+      display: block;
+      width: 100%;
+      padding: 12px 14px;
+      margin-top: 8px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 13.5px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .choice-btn:active { background: #334155; }
+
+    /* Оверлей кости D20 */
+    #dice-modal {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(10, 15, 29, 0.96);
+      border: 2px solid #ef4444;
+      border-radius: 20px;
+      padding: 24px 32px;
+      text-align: center;
+      color: #fff;
+      z-index: 30;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+      min-width: 240px;
+    }
+    #dice-val {
+      font-size: 64px;
+      font-weight: 900;
+      color: #f59e0b;
+      margin: 8px 0;
+      text-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+    }
+    #dice-status {
+      font-size: 15px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <canvas id="canvas"></canvas>
+
+  <div id="top-bar">
+    <div class="hud-badge" id="stats-hud">ХАР: <span>+2</span> | СИЛ: <span>+1</span></div>
+    <div class="hud-badge" id="inv-hud">Сумка: <span>Пусто</span></div>
+  </div>
+
+  <div id="joystick-base">
+    <div id="joystick-stick"></div>
+  </div>
+
+  <button id="action-btn">ДЕЙСТВИЕ</button>
+
+  <div id="dialog-modal">
+    <div id="dialog-name">NPC</div>
+    <div id="dialog-text">Приветствую, странник.</div>
+    <div id="dialog-options"></div>
+  </div>
+
+  <div id="dice-modal">
+    <div style="font-size:13px; color:#94a3b8; font-weight:700;">ПРОВЕРКА КУБИКА D20</div>
+    <div id="dice-val">--</div>
+    <div id="dice-status">Бросок...</div>
+  </div>
+</div>
+
+<script>
+// --- ИНИЦИАЛИЗАЦИЯ TELEGRAM WEBAPP ---
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+}
+
+function triggerHaptic(type = 'impact', style = 'medium') {
+  if (tg?.HapticFeedback) {
+    if (type === 'impact') tg.HapticFeedback.impactOccurred(style);
+    else if (type === 'notification') tg.HapticFeedback.notificationOccurred(style);
+    else if (type === 'selection') tg.HapticFeedback.selectionChanged();
+  } else if (navigator.vibrate) {
+    navigator.vibrate(type === 'notification' ? 100 : 30);
+  }
+}
+
+// --- WEB AUDIO API (ПРОЦЕДУРНЫЕ ЗВУКИ) ---
+const AudioEngine = {
+  ctx: null,
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) this.ctx = new AudioCtx();
+    }
+  },
+  playStep() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.frequency.setValueAtTime(90, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.05);
+    gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.05);
+  },
+  playDiceClick() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(400 + Math.random() * 300, this.ctx.currentTime);
+    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.04);
+  },
+  playFanfare(success) {
+    if (!this.ctx) return;
+    const notes = success ? [392, 523, 659, 783] : [300, 260, 220, 180];
+    notes.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.1);
+      gain.gain.setValueAtTime(0.12, this.ctx.currentTime + idx * 0.1);
+      gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.1 + 0.25);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(this.ctx.currentTime + idx * 0.1);
+      osc.stop(this.ctx.currentTime + idx * 0.1 + 0.25);
+    });
+  }
+};
+window.addEventListener('touchstart', () => AudioEngine.init(), { once: true });
+window.addEventListener('click', () => AudioEngine.init(), { once: true });
+
+// --- ХОЛСТ И МИР ---
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+const WORLD = { width: 1800, height: 1300 };
+const camera = { x: 0, y: 0 };
+
+// ИГРОК
+const player = {
+  x: 280,
+  y: 340,
+  r: 16,
+  speed: 210,
+  vx: 0,
+  vy: 0,
+  walkFrame: 0,
+  stats: { charisma: 2, strength: 1 },
+  inventory: [],
+  hasItem(name) { return this.inventory.includes(name); }
+};
+
+// ВОРОТА В ЦИТАДЕЛЬ
+const gate = {
+  x: 750,
+  y: 220,
+  w: 30,
+  h: 160,
+  isOpen: false
+};
+
+// СУНДУК
+const chest = {
+  x: 220,
+  y: 720,
+  w: 32,
+  h: 24,
+  opened: false,
+  item: "Грамота Наместника"
+};
+
+// NPC 1: СТАРИК У ОЗЕРА
+const hermit = {
+  x: 520,
+  y: 730,
+  r: 16,
+  name: "Отшельник",
+  talkRadius: 70,
+  dialogDone: false
+};
+
+// NPC 2: СТРАЖНИК ВОРОТ
+const guard = {
+  x: 710,
+  y: 300,
+  r: 18,
+  name: "Капитан Заставы",
+  talkRadius: 80,
+  passed: false,
+  failed: false
+};
+
+// ПРЕПЯТСТВИЯ И ДЕКОРАЦИИ
+const obstacles = [
+  // Стены цитадели (разрезаны воротами)
+  { x: 740, y: 0, w: 40, h: 220, type: 'wall' },
+  { x: 740, y: 380, w: 40, h: 920, type: 'wall' },
+  // Озеро
+  { x: 380, y: 800, w: 260, h: 180, type: 'water' },
+  // Домик в деревне
+  { x: 140, y: 160, w: 120, h: 90, type: 'house' },
+  // Деревья
+  { x: 420, y: 220, r: 35, type: 'tree' },
+  { x: 180, y: 480, r: 40, type: 'tree' },
+  { x: 500, y: 480, r: 35, type: 'tree' },
+  { x: 300, y: 950, r: 42, type: 'tree' },
+  // Каменные башни в Цитадели
+  { x: 1050, y: 240, w: 140, h: 140, type: 'castle' },
+  { x: 1050, y: 550, w: 140, h: 140, type: 'castle' },
+  { x: 1350, y: 400, r: 50, type: 'tree' }
+];
+
+// --- ДЖОЙСТИК ---
+const base = document.getElementById('joystick-base');
+const stick = document.getElementById('joystick-stick');
+let touchId = null;
+let baseCenter = { x: 0, y: 0 };
+const maxDist = 42;
+
+base.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  touchId = t.identifier;
+  const rect = base.getBoundingClientRect();
+  baseCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  updateStick(t.clientX, t.clientY);
+  triggerHaptic('selection');
+}, { passive: false });
+
+window.addEventListener('touchmove', (e) => {
+  if (touchId === null) return;
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i];
+    if (t.identifier === touchId) {
+      updateStick(t.clientX, t.clientY);
+      break;
+    }
+  }
+}, { passive: false });
+
+function resetStick() {
+  touchId = null;
+  stick.style.transform = `translate3d(0, 0, 0)`;
+  player.vx = 0;
+  player.vy = 0;
+}
+window.addEventListener('touchend', resetStick);
+window.addEventListener('touchcancel', resetStick);
+
+function updateStick(cx, cy) {
+  const dx = cx - baseCenter.x;
+  const dy = cy - baseCenter.y;
+  const dist = Math.hypot(dx, dy);
+  const clamped = Math.min(dist, maxDist);
+  const angle = Math.atan2(dy, dx);
+
+  const nx = Math.cos(angle) * clamped;
+  const ny = Math.sin(angle) * clamped;
+
+  stick.style.transform = `translate3d(${nx}px, ${ny}px, 0)`;
+  player.vx = nx / maxDist;
+  player.vy = ny / maxDist;
+}
+
+// Управление клавиатурой ПК (для тестов в браузере)
+const keys = {};
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+// --- ИНТЕРФЕЙС, ДИАЛОГИ И КУБИК ---
+const actionBtn = document.getElementById('action-btn');
+const dialogModal = document.getElementById('dialog-modal');
+const dialogName = document.getElementById('dialog-name');
+const dialogText = document.getElementById('dialog-text');
+const dialogOptions = document.getElementById('dialog-options');
+const diceModal = document.getElementById('dice-modal');
+const diceVal = document.getElementById('dice-val');
+const diceStatus = document.getElementById('dice-status');
+const invHud = document.getElementById('inv-hud');
+
+let activeInteractTarget = null; // 'guard', 'hermit', 'chest'
+
+actionBtn.addEventListener('click', () => {
+  triggerHaptic('impact', 'medium');
+  if (activeInteractTarget === 'chest') openChest();
+  else if (activeInteractTarget === 'hermit') openHermitDialog();
+  else if (activeInteractTarget === 'guard') openGuardDialog();
+});
+
+function updateInventoryUI() {
+  invHud.innerHTML = `Сумка: <span>${player.inventory.length ? player.inventory.join(', ') : 'Пусто'}</span>`;
+}
+
+function openChest() {
+  if (chest.opened) return;
+  chest.opened = true;
+  player.inventory.push(chest.item);
+  updateInventoryUI();
+  triggerHaptic('notification', 'success');
+  AudioEngine.playFanfare(true);
+
+  dialogName.innerText = "Старый тайник";
+  dialogText.innerText = `Вы открыли заросший сундук и нашли запечатанный королевский свиток: «${chest.item}»! Это поможет пройти через пост капитана без лишних вопросов.`;
+  dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Забрать и закрыть]</button>`;
+  dialogModal.style.display = 'block';
+  actionBtn.style.display = 'none';
+}
+
+function openHermitDialog() {
+  dialogName.innerText = hermit.name;
+  actionBtn.style.display = 'none';
+  dialogModal.style.display = 'block';
+
+  if (!hermit.dialogDone) {
+    dialogText.innerText = "«Приветствую тебя. В цитадель за стеной просто так не пройти — капитан неподкупен. Но на западе в кустах спрятан тайник со старой грамотой. Возьми её, либо попробуй убедить его силой слова!»";
+    dialogOptions.innerHTML = `
+      <button class="choice-btn" onclick="receiveHermitBlessing()">«Спасибо за совет, мудрец» [Получить благословение +1 ХАР]</button>
+      <button class="choice-btn" onclick="closeDialog()">[Уйти]</button>
+    `;
+  } else {
+    dialogText.innerText = "«Пусть духи хранят тебя. Иди к воротам на восток.»";
+    dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Кивнуть и уйти]</button>`;
+  }
+}
+
+function receiveHermitBlessing() {
+  hermit.dialogDone = true;
+  player.stats.charisma += 1;
+  document.getElementById('stats-hud').innerHTML = `ХАР: <span>+${player.stats.charisma}</span> | СИЛ: <span>+${player.stats.strength}</span>`;
+  triggerHaptic('notification', 'success');
+  closeDialog();
+}
+
+function openGuardDialog() {
+  dialogName.innerText = guard.name;
+  actionBtn.style.display = 'none';
+  dialogModal.style.display = 'block';
+
+  if (guard.passed) {
+    dialogText.innerText = "«Ворота открыты. Добро пожаловать во внутреннюю Цитадель!»";
+    dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Войти]</button>`;
+    return;
+  }
+  if (guard.failed) {
+    dialogText.innerText = "«Я тебя предупреждал! Прочь от заставы, пока я не заковал тебя в кандалы!»";
+    dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Отойти]</button>`;
+    return;
+  }
+
+  dialogText.innerText = "«Стой! Проход за стену цитадели закрыт. Вход только по спецдопуску или по делу государственной важности.»";
+  let options = "";
+
+  if (player.hasItem("Грамота Наместника")) {
+    options += `<button class="choice-btn" style="border-color:#f59e0b;" onclick="useItemPass()">📜 [Показать Грамоту] «У меня есть официальный допуск Наместника»</button>`;
+  }
+  options += `
+    <button class="choice-btn" onclick="rollD20('charisma', 13)">
+      🎲 [Харизма: Сложность 13] «Я посол соседних земель со срочным донесением» (+${player.stats.charisma})
+    </button>
+    <button class="choice-btn" onclick="rollD20('strength', 15)">
+      🎲 [Запугивание: Сложность 15] «Отойди с прохода, если тебе дорога служба» (+${player.stats.strength})
+    </button>
+    <button class="choice-btn" onclick="closeDialog()">[Отойти]</button>
+  `;
+  dialogOptions.innerHTML = options;
+}
+
+function useItemPass() {
+  guard.passed = true;
+  gate.isOpen = true;
+  triggerHaptic('notification', 'success');
+  AudioEngine.playFanfare(true);
+  dialogText.innerText = "«Печать подлинная... Прошу прощения за задержку. Открыть ворота цитадели!»";
+  dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Пройти через ворота]</button>`;
+}
+
+function closeDialog() {
+  dialogModal.style.display = 'none';
+  triggerHaptic('selection');
+}
+
+// МЕХАНИКА КУБИКА D20
+function rollD20(statType, diff) {
+  dialogModal.style.display = 'none';
+  diceModal.style.display = 'block';
+  diceStatus.innerText = `Проверка сложности: ${diff}`;
+  diceStatus.style.color = "#ffffff";
+
+  let ticks = 0;
+  const timer = setInterval(() => {
+    diceVal.innerText = Math.floor(Math.random() * 20) + 1;
+    AudioEngine.playDiceClick();
+    triggerHaptic('impact', 'light');
+    ticks++;
+
+    if (ticks > 14) {
+      clearInterval(timer);
+      const roll = Math.floor(Math.random() * 20) + 1;
+      const bonus = player.stats[statType] || 0;
+      const total = roll + bonus;
+      const success = total >= diff;
+
+      diceVal.innerText = total;
+      diceStatus.innerText = success ? `УСПЕХ! (${roll} + ${bonus} бонус)` : `ПРОВАЛ (${roll} + ${bonus} бонус)`;
+      diceStatus.style.color = success ? "#4ade80" : "#f87171";
+
+      triggerHaptic('notification', success ? 'success' : 'error');
+      AudioEngine.playFanfare(success);
+
+      setTimeout(() => {
+        diceModal.style.display = 'none';
+        dialogModal.style.display = 'block';
+        if (success) {
+          guard.passed = true;
+          gate.isOpen = true;
+          dialogText.innerText = "«Твои доводы звучат убедительно... Ладно, ворота открыты, проходи!»";
+        } else {
+          guard.failed = true;
+          dialogText.innerText = "«Жалкая ложь! Ты никуда не пройдешь. Убирайся вон!»";
+        }
+        dialogOptions.innerHTML = `<button class="choice-btn" onclick="closeDialog()">[Завершить]</button>`;
+      }, 1500);
+    }
+  }, 65);
+}
+
+// --- ПРОВЕРКА ВЗАИМОДЕЙСТВИЙ ---
+function checkInteractions() {
+  const dGuard = Math.hypot(player.x - guard.x, player.y - guard.y);
+  const dHermit = Math.hypot(player.x - hermit.x, player.y - hermit.y);
+  const dChest = Math.hypot(player.x - (chest.x + 16), player.y - (chest.y + 12));
+
+  if (dGuard <= guard.talkRadius) {
+    activeInteractTarget = 'guard';
+    actionBtn.innerText = "СТРАЖ";
+    actionBtn.style.display = dialogModal.style.display === 'block' ? 'none' : 'block';
+  } else if (dHermit <= hermit.talkRadius) {
+    activeInteractTarget = 'hermit';
+    actionBtn.innerText = "ГОВОРИТЬ";
+    actionBtn.style.display = dialogModal.style.display === 'block' ? 'none' : 'block';
+  } else if (!chest.opened && dChest <= 55) {
+    activeInteractTarget = 'chest';
+    actionBtn.innerText = "СУНДУК";
+    actionBtn.style.display = dialogModal.style.display === 'block' ? 'none' : 'block';
+  } else {
+    activeInteractTarget = null;
+    actionBtn.style.display = 'none';
+  }
+}
+
+// --- ФИЗИКА И ОБНОВЛЕНИЕ ---
+let stepTimer = 0;
+let lastTime = performance.now();
+
+function update(dt) {
+  if (dialogModal.style.display === 'block' || diceModal.style.display === 'block') {
+    return;
+  }
+
+  // Поддержка клавиш ПК
+  let kx = 0, ky = 0;
+  if (keys['w'] || keys['arrowup']) ky -= 1;
+  if (keys['s'] || keys['arrowdown']) ky += 1;
+  if (keys['a'] || keys['arrowleft']) kx -= 1;
+  if (keys['d'] || keys['arrowright']) kx += 1;
+
+  if (kx !== 0 || ky !== 0) {
+    const l = Math.hypot(kx, ky);
+    player.vx = kx / l;
+    player.vy = ky / l;
+  } else if (!touchId) {
+    player.vx = 0;
+    player.vy = 0;
+  }
+
+  // Звук шагов и покачивание
+  if (player.vx !== 0 || player.vy !== 0) {
+    player.walkFrame += dt * 10;
+    stepTimer += dt;
+    if (stepTimer > 0.32) {
+      AudioEngine.playStep();
+      stepTimer = 0;
+    }
+  }
+
+  let nx = player.x + player.vx * player.speed * dt;
+  let ny = player.y + player.vy * player.speed * dt;
+
+  // Коллизия со стенами мира
+  nx = Math.max(player.r, Math.min(WORLD.width - player.r, nx));
+  ny = Math.max(player.r, Math.min(WORLD.height - player.r, ny));
+
+  // Коллизия с закрытыми воротами
+  if (!gate.isOpen) {
+    if (nx + player.r > gate.x && nx - player.r < gate.x + gate.w &&
+        ny + player.r > gate.y && ny - player.r < gate.y + gate.h) {
+      nx = player.x;
+      ny = player.y;
+    }
+  }
+
+  // Коллизия со статичными препятствиями
+  obstacles.forEach(o => {
+    if (o.r) {
+      const d = Math.hypot(nx - o.x, ny - o.y);
+      if (d < player.r + o.r) {
+        const ang = Math.atan2(ny - o.y, nx - o.x);
+        nx = o.x + Math.cos(ang) * (player.r + o.r);
+        ny = o.y + Math.sin(ang) * (player.r + o.r);
+      }
+    } else {
+      if (nx + player.r > o.x && nx - player.r < o.x + o.w &&
+          ny + player.r > o.y && ny - player.r < o.y + o.h) {
+        nx = player.x;
+        ny = player.y;
+      }
+    }
+  });
+
+  player.x = nx;
+  player.y = ny;
+
+  // Плавная камера
+  camera.x = Math.max(0, Math.min(WORLD.width - canvas.width, player.x - canvas.width / 2));
+  camera.y = Math.max(0, Math.min(WORLD.height - canvas.height, player.y - canvas.height / 2));
+
+  checkInteractions();
+}
+
+// --- ПРОЦЕДУРНАЯ ПИКСЕЛЬНАЯ ОТРИСОВКА ---
+
+function drawPixelCharacter(ctx, x, y, bodyColor, headColor, isMoving, walkFrame) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  // Тень
+  ctx.fillStyle = "rgba(0,0,0,0.3)";
+  ctx.beginPath();
+  ctx.ellipse(0, 16, 12, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ноги с анимацией ходьбы
+  const legOffset = isMoving ? Math.sin(walkFrame) * 4 : 0;
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(-8, 6 - legOffset, 6, 10 + legOffset);
+  ctx.fillRect(2, 6 + legOffset, 6, 10 - legOffset);
+
+  // Тело / туловище
+  ctx.fillStyle = bodyColor;
+  ctx.fillRect(-10, -8, 20, 15);
+  // Пояс
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(-10, 2, 20, 3);
+
+  // Голова
+  ctx.fillStyle = headColor;
+  ctx.fillRect(-8, -22, 16, 14);
+
+  // Глаза
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(-4, -16, 3, 3);
+  ctx.fillRect(2, -16, 3, 3);
+
+  ctx.restore();
+}
+
+function drawProceduralChest(ctx, c) {
+  ctx.save();
+  ctx.fillStyle = "#78350f";
+  ctx.fillRect(c.x, c.y, c.w, c.h);
+  ctx.fillStyle = "#f59e0b";
+  ctx.fillRect(c.x, c.y + 8, c.w, 4); // Золотой обод
+  ctx.fillRect(c.x + 13, c.y + 6, 6, 7); // Замок
+  if (!c.opened) {
+    ctx.strokeStyle = "#fbbf24";
+    ctx.strokeRect(c.x, c.y, c.w, c.h);
+  }
+  ctx.restore();
+}
+
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(-camera.x, -camera.y);
+
+  // Зона 1: Трава (запад)
+  ctx.fillStyle = "#2d5a27";
+  ctx.fillRect(0, 0, 750, WORLD.height);
+
+  // Зона 2: Каменная площадь цитадели (восток)
+  ctx.fillStyle = "#475569";
+  ctx.fillRect(750, 0, WORLD.width - 750, WORLD.height);
+
+  // Плитка на площади цитадели
+  ctx.strokeStyle = "rgba(255,255,255,0.06)";
+  ctx.lineWidth = 2;
+  for (let x = 750; x < WORLD.width; x += 60) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, WORLD.height); ctx.stroke();
+  }
+  for (let y = 0; y < WORLD.height; y += 60) {
+    ctx.beginPath(); ctx.moveTo(750, y); ctx.lineTo(WORLD.width, y); ctx.stroke();
+  }
+
+  // Препятствия
+  obstacles.forEach(o => {
+    if (o.type === 'water') {
+      ctx.fillStyle = "#0284c7";
+      ctx.beginPath();
+      ctx.roundRect(o.x, o.y, o.w, o.h, 40);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.3)";
+      ctx.stroke();
+    } else if (o.type === 'wall') {
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(o.x, o.y, o.w, o.h);
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(o.x + 4, o.y, o.w - 8, o.h);
+    } else if (o.type === 'house') {
+      ctx.fillStyle = "#78350f";
+      ctx.fillRect(o.x, o.y, o.w, o.h);
+      ctx.fillStyle = "#991b1b"; // крыша
+      ctx.beginPath();
+      ctx.moveTo(o.x - 10, o.y);
+      ctx.lineTo(o.x + o.w / 2, o.y - 35);
+      ctx.lineTo(o.x + o.w + 10, o.y);
+      ctx.fill();
+    } else if (o.type === 'tree') {
+      ctx.fillStyle = "#166534";
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#14532d";
+      ctx.beginPath();
+      ctx.arc(o.x - 5, o.y - 5, o.r * 0.7, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (o.type === 'castle') {
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(o.x, o.y, o.w, o.h);
+      ctx.fillStyle = "#f59e0b";
+      ctx.fillRect(o.x + 20, o.y + 30, 20, 30); // Окно башни
+    }
+  });
+
+  // Ворота
+  if (!gate.isOpen) {
+    ctx.fillStyle = "#b45309";
+    ctx.fillRect(gate.x, gate.y, gate.w, gate.h);
+    ctx.fillStyle = "#451a03";
+    ctx.fillRect(gate.x + 8, gate.y, 4, gate.h);
+    ctx.fillRect(gate.x + 18, gate.y, 4, gate.h);
+  } else {
+    ctx.fillStyle = "rgba(180, 83, 9, 0.4)";
+    ctx.fillRect(gate.x, gate.y, 10, gate.h); // Распахнутая створка
+  }
+
+  // Сундук
+  drawProceduralChest(ctx, chest);
+
+  // Отрисовка NPC: Отшельник у озера
+  drawPixelCharacter(ctx, hermit.x, hermit.y, "#0284c7", "#fde047", false, 0);
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 11px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(hermit.name, hermit.x, hermit.y - 28);
+
+  // Отрисовка NPC: Стражник ворот
+  drawPixelCharacter(ctx, guard.x, guard.y, "#dc2626", "#e2e8f0", false, 0);
+  ctx.fillText(guard.name, guard.x, guard.y - 28);
+
+  // Отрисовка Игрока
+  const isMoving = player.vx !== 0 || player.vy !== 0;
+  drawPixelCharacter(ctx, player.x, player.y, "#2563eb", "#fed7aa", isMoving, player.walkFrame);
+
+  ctx.restore();
+}
+
+// ОСНОВНОЙ ЦИКЛ
+function loop(now) {
+  const dt = Math.min((now - lastTime) / 1000, 0.1);
+  lastTime = now;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

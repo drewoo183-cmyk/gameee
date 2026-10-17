@@ -1,4 +1,4 @@
-// --- ИНИЦИАЛИЗАЦИЯ TELEGRAM ---
+он// --- ИНИЦИАЛИЗАЦИЯ TELEGRAM ---
 const tg = window.Telegram?.WebApp;
 let telegramUser = "Герой";
 if (tg) {
@@ -225,9 +225,21 @@ function updateArenaBars() {
   arenaPlayerMp.style.width = `${mpPct}%`;
   arenaEnemyHp.style.width = `${ePct}%`;
 
-  document.getElementById('hp-bar-fill').style.width = `${pPct}%`;
-  document.getElementById('mp-bar-fill').style.width = `${mpPct}%`;
+  const pPhpText = document.getElementById('arena-player-hp-text');
+  if (pPhpText) pPhpText.innerText = `${Math.max(0, Math.round(player.hp))} / ${player.maxHp} HP`;
+
+  const pPmpText = document.getElementById('arena-player-mp-text');
+  if (pPmpText) pPmpText.innerText = `${Math.max(0, Math.round(player.mp))} / ${player.maxMp} MP`;
+
+  const eHpText = document.getElementById('arena-enemy-hp-text');
+  if (eHpText) eHpText.innerText = `${Math.max(0, Math.round(activeEnemy.hp))} / ${activeEnemy.maxHp} HP`;
+
+  const topHp = document.getElementById('hp-bar-fill');
+  if (topHp) topHp.style.width = `${pPct}%`;
+  const topMp = document.getElementById('mp-bar-fill');
+  if (topMp) topMp.style.width = `${mpPct}%`;
 }
+
 
 function renderCombatSkills() {
   combatSkillsGrid.innerHTML = '';
@@ -489,6 +501,43 @@ function update(dt) {
 }
 
 // --- ОТРИСОВКА ---
+const minimapCanvas = document.getElementById('minimap-canvas');
+const mCtx = minimapCanvas ? minimapCanvas.getContext('2d') : null;
+
+function renderMinimap() {
+  if (!mCtx) return;
+  const mW = minimapCanvas.width;
+  const mH = minimapCanvas.height;
+  const scaleX = mW / WORLD.width;
+  const scaleY = mH / WORLD.height;
+
+  mCtx.clearRect(0, 0, mW, mH);
+  mCtx.fillStyle = "#162b16";
+  mCtx.fillRect(0, 0, mW, mH);
+
+  mCtx.fillStyle = "#5c4f39";
+  roads.forEach(r => {
+    mCtx.fillRect(r.x * scaleX, r.y * scaleY, r.w * scaleX, r.h * scaleY);
+  });
+
+  if (!chest.opened) {
+    mCtx.fillStyle = "#facc15";
+    mCtx.fillRect(chest.x * scaleX - 2, chest.y * scaleY - 2, 5, 5);
+  }
+
+  mCtx.fillStyle = "#ef4444";
+  enemies.forEach(e => {
+    mCtx.beginPath();
+    mCtx.arc(e.x * scaleX, e.y * scaleY, 2.5, 0, Math.PI * 2);
+    mCtx.fill();
+  });
+
+  mCtx.fillStyle = "#38bdf8";
+  mCtx.beginPath();
+  mCtx.arc(player.x * scaleX, player.y * scaleY, 3.5, 0, Math.PI * 2);
+  mCtx.fill();
+}
+
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.save();
